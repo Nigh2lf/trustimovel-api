@@ -1,0 +1,1330 @@
+-- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
+--
+-- Host: trustimovel2.vpshost0802.mysql.dbaas.com.br    Database: trustimovel2
+-- ------------------------------------------------------
+-- Server version	5.7.32-35-log
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `Agencia`
+--
+
+DROP TABLE IF EXISTS `Agencia`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Agencia` (
+  `Id_Agencia` int(11) NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CodigoAgencia` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Agencia`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `AgenciaCliente`
+--
+
+DROP TABLE IF EXISTS `AgenciaCliente`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `AgenciaCliente` (
+  `Id_AgenciaCliente` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Agencia` int(11) DEFAULT NULL,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_AgenciaCliente`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Aviso`
+--
+
+DROP TABLE IF EXISTS `Aviso`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Aviso` (
+  `Id_Aviso` int(11) NOT NULL AUTO_INCREMENT,
+  `Ativo` int(11) DEFAULT NULL,
+  `Titulo` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Link` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Data` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Horario` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Local` text COLLATE utf8_unicode_ci,
+  `Blank` int(11) DEFAULT NULL,
+  `Capa` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Aviso`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Blog`
+--
+
+DROP TABLE IF EXISTS `Blog`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Blog` (
+  `Id_Blog` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) DEFAULT NULL,
+  `Id_BlogCategoria` int(11) DEFAULT NULL,
+  `Imagem` varchar(90) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `YouTube` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Titulo` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Data` date DEFAULT NULL,
+  `Descricao` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_Blog`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `BlogCategoria`
+--
+
+DROP TABLE IF EXISTS `BlogCategoria`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `BlogCategoria` (
+  `Id_BlogCategoria` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Descricao` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_BlogCategoria`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Captador`
+--
+
+DROP TABLE IF EXISTS `Captador`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Captador` (
+  `Id_Captador` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Email` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `DDDTel` varchar(3) COLLATE latin1_general_ci DEFAULT NULL,
+  `Tel` varchar(15) COLLATE latin1_general_ci DEFAULT NULL,
+  `OBS` text COLLATE latin1_general_ci,
+  `Nome` varchar(100) COLLATE latin1_general_ci NOT NULL DEFAULT '',
+  `Id_Cliente` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Captador`)
+) ENGINE=InnoDB AUTO_INCREMENT=591 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Cidade`
+--
+
+DROP TABLE IF EXISTS `Cidade`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Cidade` (
+  `Id_Cidade` int(11) NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(120) COLLATE latin1_general_ci DEFAULT NULL,
+  `Id_Uf` int(2) DEFAULT NULL,
+  `ibge` int(7) DEFAULT NULL,
+  `Id_CidadeBackUp` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_Cidade`)
+) ENGINE=InnoDB AUTO_INCREMENT=5611 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Cliente`
+--
+
+DROP TABLE IF EXISTS `Cliente`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Cliente` (
+  `Id_Cliente` int(11) NOT NULL AUTO_INCREMENT,
+  `Ativo` tinyint(1) DEFAULT NULL,
+  `Portfolio` int(11) DEFAULT NULL,
+  `Nome` varchar(50) DEFAULT NULL,
+  `Login` varchar(20) DEFAULT NULL,
+  `Senha` varchar(35) DEFAULT NULL,
+  `Telefone` varchar(50) DEFAULT NULL,
+  `Whatsapp` varchar(45) DEFAULT NULL,
+  `Descricao` text,
+  `Email` varchar(100) DEFAULT NULL,
+  `DataCadastro` varchar(45) NOT NULL,
+  `Logo` varchar(45) DEFAULT NULL,
+  `Site` varchar(100) DEFAULT NULL,
+  `DetalheImovel` varchar(100) DEFAULT NULL,
+  `DetalheImovelRewrite` varchar(200) DEFAULT NULL,
+  `PastaCliente` varchar(100) DEFAULT NULL,
+  `MarcaDAgua` varchar(45) DEFAULT NULL,
+  `PosicaoMarcadAgua` int(10) unsigned DEFAULT NULL,
+  `Id_Plano` int(10) unsigned NOT NULL DEFAULT '0',
+  `Comunidade` int(11) DEFAULT NULL,
+  `DataAceiteComunidade` datetime DEFAULT NULL,
+  `TopoWidth` int(10) unsigned NOT NULL DEFAULT '0',
+  `TopoHeight` int(10) unsigned NOT NULL DEFAULT '0',
+  `XML` tinyint(1) DEFAULT NULL,
+  `Id_ClientePortal` int(10) unsigned DEFAULT NULL,
+  `PastaArquivo` varchar(300) DEFAULT NULL,
+  `NoDestaquePortal` int(10) unsigned DEFAULT NULL,
+  `TokenOLX` varchar(200) DEFAULT NULL,
+  `TokenImovelWeb` varchar(45) DEFAULT NULL,
+  `Id_ClienteBackup` int(10) DEFAULT NULL,
+  PRIMARY KEY (`Id_Cliente`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdmin`
+--
+
+DROP TABLE IF EXISTS `ClienteAdmin`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdmin` (
+  `Id_ClienteAdmin` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Ativo` int(11) DEFAULT NULL,
+  `Nome` varchar(70) COLLATE latin1_general_ci DEFAULT NULL,
+  `dddTel` varchar(3) COLLATE latin1_general_ci DEFAULT NULL,
+  `Tel` varchar(11) COLLATE latin1_general_ci DEFAULT NULL,
+  `dddCel` varchar(3) COLLATE latin1_general_ci DEFAULT NULL,
+  `Cel` varchar(11) COLLATE latin1_general_ci DEFAULT NULL,
+  `Email` varchar(50) COLLATE latin1_general_ci DEFAULT NULL,
+  `Obs` text COLLATE latin1_general_ci,
+  `Id_Pais` int(11) DEFAULT NULL,
+  `Id_Uf` int(11) DEFAULT NULL,
+  `Id_Cidade` int(11) DEFAULT NULL,
+  `Id_Regiao` int(11) DEFAULT NULL,
+  `Bairro` varchar(50) COLLATE latin1_general_ci DEFAULT NULL,
+  `Endereco` varchar(70) COLLATE latin1_general_ci DEFAULT NULL,
+  `Complemento` varchar(50) COLLATE latin1_general_ci DEFAULT NULL,
+  `Numero` varchar(10) COLLATE latin1_general_ci DEFAULT NULL,
+  `Cep` varchar(9) COLLATE latin1_general_ci DEFAULT NULL,
+  `Cadastro` datetime DEFAULT NULL,
+  `DataAtualizacao` datetime DEFAULT NULL,
+  `Nascimento` date DEFAULT NULL,
+  `CPF` varchar(45) COLLATE latin1_general_ci DEFAULT NULL,
+  `DataCadastro` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_ClienteAdmin`),
+  KEY `Id_Proprietario` (`Id_ClienteAdmin`)
+) ENGINE=InnoDB AUTO_INCREMENT=5873 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdminFavorito`
+--
+
+DROP TABLE IF EXISTS `ClienteAdminFavorito`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdminFavorito` (
+  `Id_ClienteAdminFavorito` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned DEFAULT NULL,
+  `Id_Imovel` int(10) unsigned DEFAULT NULL,
+  `Id_ClienteAdmin` int(10) unsigned DEFAULT NULL,
+  `Data` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_ClienteAdminFavorito`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdminFoco`
+--
+
+DROP TABLE IF EXISTS `ClienteAdminFoco`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdminFoco` (
+  `Id_ClienteAdminFoco` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Id_ClienteAdmin` int(10) unsigned DEFAULT NULL,
+  `Id_Objetivo` int(10) unsigned DEFAULT NULL,
+  `Id_ImovelTipo` int(10) unsigned DEFAULT NULL,
+  `Id_Regiao` int(10) unsigned DEFAULT NULL,
+  `Id_Cidade` int(11) DEFAULT NULL,
+  `Condominio` int(10) unsigned DEFAULT NULL,
+  `ValorInicial` int(10) unsigned DEFAULT NULL,
+  `ValorFinal` int(10) unsigned DEFAULT NULL,
+  `Recurso` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_ClienteAdminFoco`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdminTipoInteracao`
+--
+
+DROP TABLE IF EXISTS `ClienteAdminTipoInteracao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdminTipoInteracao` (
+  `Id_ClienteAdminTipoInteracao` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Imagem` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Id_Cliente` int(10) unsigned NOT NULL DEFAULT '0',
+  `Cor` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Icone` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_ClienteAdminTipoInteracao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdminTipoInteracaoDetalhe`
+--
+
+DROP TABLE IF EXISTS `ClienteAdminTipoInteracaoDetalhe`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdminTipoInteracaoDetalhe` (
+  `Id_ClienteAdminTipoInteracaoDetalhe` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_ClienteAdminTipoInteracao` int(10) unsigned DEFAULT NULL,
+  `Id_ClienteAdmin` int(11) DEFAULT NULL,
+  `DataHora` datetime DEFAULT NULL,
+  `Obs` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_ClienteAdminTipoInteracaoDetalhe`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteAdminTipoInteracaoDetalheImovel`
+--
+
+DROP TABLE IF EXISTS `ClienteAdminTipoInteracaoDetalheImovel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteAdminTipoInteracaoDetalheImovel` (
+  `Id_ClienteAdminTipoInteracaoDetalheImovel` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_ClienteAdminTipoInteracaoDetalhe` int(10) unsigned NOT NULL DEFAULT '0',
+  `ApelidoImovel` varchar(10) COLLATE utf8_unicode_ci NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_ClienteAdminTipoInteracaoDetalheImovel`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClientePaginaCadastro`
+--
+
+DROP TABLE IF EXISTS `ClientePaginaCadastro`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClientePaginaCadastro` (
+  `Id_Cliente` int(10) unsigned NOT NULL DEFAULT '0',
+  `Id_Pagina` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Cliente`,`Id_Pagina`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ClienteTemplate`
+--
+
+DROP TABLE IF EXISTS `ClienteTemplate`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ClienteTemplate` (
+  `Id_ClienteTemplate` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `ImoveisExemplo` tinyint(4) DEFAULT NULL,
+  `Nome` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Title` text COLLATE utf8_unicode_ci,
+  `Description` text COLLATE utf8_unicode_ci,
+  `Keywords` text COLLATE utf8_unicode_ci,
+  `EmailSite` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `EmailEnvio` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Endereco` text COLLATE utf8_unicode_ci,
+  `Telefone` text COLLATE utf8_unicode_ci,
+  `Whatsapp` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Creci` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `UrlSite` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `GoogleMaps` text COLLATE utf8_unicode_ci,
+  `GoogleAnalytcs` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Facebook` text COLLATE utf8_unicode_ci,
+  `FacebookLabel` text COLLATE utf8_unicode_ci,
+  `Instagram` text COLLATE utf8_unicode_ci,
+  `InstagramLabel` text COLLATE utf8_unicode_ci,
+  `CorPrincipal` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CorPrincipalHover` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CorSecundaria` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CorSecundariaHover` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_ClienteTemplate`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Condominio`
+--
+
+DROP TABLE IF EXISTS `Condominio`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Condominio` (
+  `Id_Condominio` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Titulo` varchar(60) CHARACTER SET latin1 COLLATE latin1_general_ci NOT NULL,
+  `Descricao` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Site` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Empreendimento` tinyint(4) DEFAULT '0',
+  `Cep` varchar(10) DEFAULT NULL,
+  `Id_Pais` int(11) DEFAULT NULL,
+  `Id_Uf` int(11) DEFAULT NULL,
+  `Cidade` varchar(100) DEFAULT NULL,
+  `Complemento` varchar(100) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Bairro` varchar(30) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Numero` varchar(10) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Endereco` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Id_Regiao` int(11) DEFAULT NULL,
+  `ContatoLocal` varchar(30) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `dddTel` varchar(3) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Tel` varchar(10) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Obs` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Trabalhar` tinyint(4) DEFAULT '0',
+  `Video` varchar(100) NOT NULL DEFAULT '',
+  `Logo` varchar(100) DEFAULT NULL,
+  `Arquivo` varchar(100) DEFAULT NULL,
+  `Id_CondominioBackup` int(10) DEFAULT NULL,
+  PRIMARY KEY (`Id_Condominio`),
+  KEY `Id_Condominio` (`Id_Condominio`)
+) ENGINE=InnoDB AUTO_INCREMENT=952 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CondominioFoto`
+--
+
+DROP TABLE IF EXISTS `CondominioFoto`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `CondominioFoto` (
+  `Id_CondominioFoto` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Condominio` int(10) unsigned NOT NULL DEFAULT '0',
+  `NoImagem` int(10) unsigned NOT NULL DEFAULT '0',
+  `Imagem` varchar(100) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`Id_CondominioFoto`)
+) ENGINE=InnoDB AUTO_INCREMENT=159 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CondominioInfra`
+--
+
+DROP TABLE IF EXISTS `CondominioInfra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `CondominioInfra` (
+  `Id_CondominioInfra` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Descricao` text,
+  `Id_CondominioInfraBackUp` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`Id_CondominioInfra`)
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CondominioInfraCadastro`
+--
+
+DROP TABLE IF EXISTS `CondominioInfraCadastro`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `CondominioInfraCadastro` (
+  `Id_Condominio` int(10) unsigned NOT NULL DEFAULT '0',
+  `Id_CondominioInfra` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Condominio`,`Id_CondominioInfra`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ContatosAPI`
+--
+
+DROP TABLE IF EXISTS `ContatosAPI`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ContatosAPI` (
+  `Id_ContatosAPI` int(11) NOT NULL AUTO_INCREMENT,
+  `Data` datetime DEFAULT NULL,
+  `Destino` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `FromEmail` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `NomeFrom` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Reply` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Assunto` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Mensagem` text COLLATE latin1_general_ci,
+  `Copia` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `CopiaOculta` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_ContatosAPI`)
+) ENGINE=InnoDB AUTO_INCREMENT=1113 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Empresa`
+--
+
+DROP TABLE IF EXISTS `Empresa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Empresa` (
+  `Id_Empresa` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned DEFAULT NULL,
+  `Titulo` varchar(100) DEFAULT NULL,
+  `Descricao` text,
+  `Imagem` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Id_Empresa`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=498 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Exportar`
+--
+
+DROP TABLE IF EXISTS `Exportar`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Exportar` (
+  `Id_Exportar` int(11) NOT NULL AUTO_INCREMENT,
+  `Empresa` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CampoImovel` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `ForaDoPadrao` int(11) DEFAULT NULL,
+  `Campo1` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo1Valor` int(11) DEFAULT NULL,
+  `Campo2` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo2Valor` int(11) DEFAULT NULL,
+  `Campo2Padrao` int(11) DEFAULT NULL,
+  `Campo3` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo3Valor` int(11) DEFAULT NULL,
+  `Campo3Padrao` int(11) DEFAULT NULL,
+  `Campo4` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo4Valor` int(11) DEFAULT NULL,
+  `ValorPadrao` int(11) DEFAULT NULL,
+  `Ordenacao` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `LinkExportacao` varchar(300) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CampoEndereco` int(11) DEFAULT NULL,
+  `Campo5` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo5Valor` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo6` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo6Valor` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo7` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo7Valor` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Exportar`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='			';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ExportarEmpresa`
+--
+
+DROP TABLE IF EXISTS `ExportarEmpresa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ExportarEmpresa` (
+  `Id_Exportar_Empresa` int(11) NOT NULL AUTO_INCREMENT,
+  `Empresa` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `CampoImovel` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Ordenacao` int(11) DEFAULT NULL,
+  `Campo1Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo2Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo3Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo4Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `CampoEnderecoPlano` int(11) DEFAULT NULL,
+  `Campo5Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo6Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Campo7Plano` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Exportar_Empresa`)
+) ENGINE=InnoDB AUTO_INCREMENT=2519 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ExportarEmpresaRetorno`
+--
+
+DROP TABLE IF EXISTS `ExportarEmpresaRetorno`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ExportarEmpresaRetorno` (
+  `Id_ExportarEmpresaRetorno` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Id_Imovel` int(11) DEFAULT NULL,
+  `ApelidoImovel` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Mensagem` text COLLATE utf8_unicode_ci,
+  `Exportador` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Data` datetime DEFAULT NULL,
+  `DoPortal` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_ExportarEmpresaRetorno`)
+) ENGINE=InnoDB AUTO_INCREMENT=1790026 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='			';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ExpotacaoControle`
+--
+
+DROP TABLE IF EXISTS `ExpotacaoControle`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ExpotacaoControle` (
+  `Id_ExpotacaoControle` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Portal` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Data` datetime DEFAULT NULL,
+  `Retorno` text COLLATE utf8_unicode_ci,
+  `Status` text COLLATE utf8_unicode_ci,
+  `Publicados` text COLLATE utf8_unicode_ci,
+  `JsonEnviado` longtext COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_ExpotacaoControle`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `FotoTopo`
+--
+
+DROP TABLE IF EXISTS `FotoTopo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `FotoTopo` (
+  `Id_FotoTopo` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Imagem` varchar(90) DEFAULT NULL,
+  `Link` varchar(150) DEFAULT NULL,
+  `Titulo` varchar(100) DEFAULT NULL,
+  `Descricao` text,
+  `Fixo` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_FotoTopo`)
+) ENGINE=InnoDB AUTO_INCREMENT=560 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Funcionario`
+--
+
+DROP TABLE IF EXISTS `Funcionario`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Funcionario` (
+  `Id_Funcionario` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Nome` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Email` varchar(60) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Senha` varchar(40) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Descricao` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Id_FuncionarioBackup` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_Funcionario`)
+) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `FuncionarioPaginaCadastro`
+--
+
+DROP TABLE IF EXISTS `FuncionarioPaginaCadastro`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `FuncionarioPaginaCadastro` (
+  `Id_Funcionario` int(11) NOT NULL,
+  `Id_Pagina` tinyint(4) NOT NULL,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`Id_Funcionario`,`Id_Pagina`) USING BTREE,
+  KEY `Id_Cadastro` (`Id_Pagina`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `FuncionarioPermissao`
+--
+
+DROP TABLE IF EXISTS `FuncionarioPermissao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `FuncionarioPermissao` (
+  `Id_FuncionarioPermissao` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL DEFAULT '0',
+  `Id_Pagina` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_FuncionarioPermissao`)
+) ENGINE=InnoDB AUTO_INCREMENT=17688 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Gerencia`
+--
+
+DROP TABLE IF EXISTS `Gerencia`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Gerencia` (
+  `Id_Gerencia` int(11) NOT NULL AUTO_INCREMENT,
+  `Login` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Senha` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Gerencia`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `HistoricoSistema2`
+--
+
+DROP TABLE IF EXISTS `HistoricoSistema2`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `HistoricoSistema2` (
+  `Id_HistoricoSistema` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `IP` varchar(45) NOT NULL,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Pagina` varchar(100) NOT NULL,
+  `Data` datetime NOT NULL,
+  PRIMARY KEY (`Id_HistoricoSistema`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImoveIinfra`
+--
+
+DROP TABLE IF EXISTS `ImoveIinfra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImoveIinfra` (
+  `Id_ImovelInfra` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_ImovelInfra`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Imovel`
+--
+
+DROP TABLE IF EXISTS `Imovel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Imovel` (
+  `Id_Imovel` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `Id_ClienteAdmin` int(11) NOT NULL DEFAULT '0',
+  `ApelidoImovel` int(11) DEFAULT NULL,
+  `Ativo` tinyint(4) DEFAULT '0',
+  `Fixo` tinyint(4) DEFAULT NULL,
+  `ExibirValor` tinyint(4) DEFAULT '0',
+  `Mobiliado` tinyint(4) DEFAULT NULL,
+  `Reservado` tinyint(4) DEFAULT NULL,
+  `Id_Tipo` int(11) NOT NULL DEFAULT '0',
+  `Id_Condominio` int(11) NOT NULL DEFAULT '0',
+  `NoChave` varchar(10) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Endereco` varchar(100) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Numero` varchar(10) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Complemento` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `CEP` varchar(20) DEFAULT NULL,
+  `Bairro` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Id_Cidade` int(11) DEFAULT '0',
+  `Id_Regiao` int(11) DEFAULT '0',
+  `Id_Uf` varchar(4) DEFAULT NULL,
+  `Id_Pais` int(10) DEFAULT NULL,
+  `ContatoLocal` varchar(70) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `dddTel` varchar(3) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Tel` varchar(12) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Descricao` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Quartos` int(11) DEFAULT '0',
+  `Suite` int(11) DEFAULT NULL,
+  `Banheiro` int(11) DEFAULT NULL,
+  `Hospede` int(11) DEFAULT NULL,
+  `VagaGaragem` int(10) unsigned DEFAULT NULL,
+  `Obs` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `FichaTec` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `ComoVisitar` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `DocumentacaoOK` tinyint(4) DEFAULT '0',
+  `DocumentacaoObs` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Permuta` tinyint(4) DEFAULT '0',
+  `PermutaObs` text CHARACTER SET latin1 COLLATE latin1_general_ci,
+  `Cadastro` datetime DEFAULT NULL,
+  `DataAtualizacao` datetime DEFAULT NULL,
+  `Saida` datetime DEFAULT NULL,
+  `Motivo` varchar(20) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Retorno` datetime DEFAULT NULL,
+  `AnuncioPlaca` tinyint(4) DEFAULT '0',
+  `AnuncioJornal` tinyint(4) DEFAULT '0',
+  `AnuncioInternet` tinyint(4) DEFAULT '0',
+  `Oportunidade` tinyint(4) DEFAULT '0',
+  `Destaque` tinyint(4) DEFAULT '0',
+  `Exclusividade` tinyint(4) DEFAULT '0',
+  `VaiAdministrar` tinyint(4) DEFAULT '0',
+  `BomParaVenda` tinyint(4) DEFAULT '0',
+  `Laudemio` tinyint(4) DEFAULT '0',
+  `Id_Funcionario` int(5) unsigned DEFAULT NULL,
+  `AreaTotal` varchar(50) DEFAULT NULL,
+  `AreaConstruida` varchar(50) DEFAULT NULL,
+  `Acesso` int(10) unsigned NOT NULL,
+  `Id_Captador` int(10) unsigned DEFAULT NULL,
+  `CaptadorPorcentagem` varchar(10) DEFAULT NULL,
+  `Video` varchar(100) DEFAULT NULL,
+  `PetropolisImoveis` int(10) unsigned DEFAULT NULL,
+  `TeresopolisImoveis` int(10) DEFAULT NULL,
+  `JuizDeForaImoveis` int(10) unsigned DEFAULT NULL,
+  `Acertimovel` int(10) DEFAULT NULL,
+  `Eiimovel` int(11) DEFAULT NULL,
+  `ZAP` int(11) DEFAULT NULL,
+  `VivaReal` int(11) DEFAULT NULL,
+  `OLX` int(11) DEFAULT NULL,
+  `MercadoLivre` int(11) DEFAULT NULL,
+  `ImovelWeb` int(10) DEFAULT NULL,
+  `ZipAnuncios` int(11) DEFAULT NULL,
+  `Campainha` int(11) DEFAULT NULL,
+  `Portal123i` int(11) DEFAULT NULL,
+  `CasaMineira` int(10) DEFAULT NULL,
+  `Id_ImovelBackUp` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`Id_Imovel`),
+  KEY `Id_Imovel` (`Id_Imovel`),
+  KEY `Id_Proprietario` (`Id_ClienteAdmin`)
+) ENGINE=InnoDB AUTO_INCREMENT=48731 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelAnexo`
+--
+
+DROP TABLE IF EXISTS `ImovelAnexo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelAnexo` (
+  `Id_ImovelAnexo` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Imovel` int(11) DEFAULT NULL,
+  `Id_Funcionario` int(11) DEFAULT NULL,
+  `NomeArquivo` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Arquivo` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Descricao` text COLLATE latin1_general_ci,
+  `Data` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_ImovelAnexo`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary view structure for view `ImovelAtivo`
+--
+
+DROP TABLE IF EXISTS `ImovelAtivo`;
+/*!50001 DROP VIEW IF EXISTS `ImovelAtivo`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `ImovelAtivo` AS SELECT 
+ 1 AS `Id_Imovel`,
+ 1 AS `Id_Cliente`,
+ 1 AS `ApelidoImovel`,
+ 1 AS `Ativo`,
+ 1 AS `ExibirValor`,
+ 1 AS `Id_ClienteAdmin`,
+ 1 AS `Id_ImovelTipo`,
+ 1 AS `Id_Condominio`,
+ 1 AS `NoChave`,
+ 1 AS `Endereco`,
+ 1 AS `Numero`,
+ 1 AS `Complemento`,
+ 1 AS `Bairro`,
+ 1 AS `Id_Cidade`,
+ 1 AS `Id_Regiao`,
+ 1 AS `Id_Pais`,
+ 1 AS `Id_Uf`,
+ 1 AS `ContatoLocal`,
+ 1 AS `dddTel`,
+ 1 AS `Tel`,
+ 1 AS `Descricao`,
+ 1 AS `Quartos`,
+ 1 AS `Banheiro`,
+ 1 AS `Suite`,
+ 1 AS `VagaGaragem`,
+ 1 AS `Obs`,
+ 1 AS `FichaTec`,
+ 1 AS `ComoVisitar`,
+ 1 AS `DocumentacaoOK`,
+ 1 AS `DocumentacaoObs`,
+ 1 AS `Permuta`,
+ 1 AS `PermutaObs`,
+ 1 AS `Cadastro`,
+ 1 AS `DataAtualizacao`,
+ 1 AS `Saida`,
+ 1 AS `Motivo`,
+ 1 AS `Retorno`,
+ 1 AS `AnuncioPlaca`,
+ 1 AS `AnuncioJornal`,
+ 1 AS `AnuncioInternet`,
+ 1 AS `Oportunidade`,
+ 1 AS `Destaque`,
+ 1 AS `Exclusividade`,
+ 1 AS `VaiAdministrar`,
+ 1 AS `BomParaVenda`,
+ 1 AS `Laudemio`,
+ 1 AS `Id_Funcionario`,
+ 1 AS `AreaTotal`,
+ 1 AS `AreaConstruida`,
+ 1 AS `Acesso`,
+ 1 AS `Id_Captador`,
+ 1 AS `CaptadorPorcentagem`,
+ 1 AS `Video`,
+ 1 AS `Id_ImovelBackUp`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `ImovelCaptador`
+--
+
+DROP TABLE IF EXISTS `ImovelCaptador`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelCaptador` (
+  `Id_ImovelCaptador` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `Email` varchar(100) COLLATE latin1_general_ci DEFAULT NULL,
+  `DDDTel` varchar(12) COLLATE latin1_general_ci DEFAULT NULL,
+  `Tel` varchar(20) COLLATE latin1_general_ci DEFAULT NULL,
+  `DDDCel` varchar(2) COLLATE latin1_general_ci DEFAULT NULL,
+  `Cel` varchar(20) COLLATE latin1_general_ci DEFAULT NULL,
+  `OBS` text COLLATE latin1_general_ci,
+  PRIMARY KEY (`Id_ImovelCaptador`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelExcluido`
+--
+
+DROP TABLE IF EXISTS `ImovelExcluido`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelExcluido` (
+  `Id_Imovel` int(11) NOT NULL AUTO_INCREMENT,
+  `Informacoes` json DEFAULT NULL,
+  `DataExclusao` datetime DEFAULT NULL,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_Imovel`)
+) ENGINE=InnoDB AUTO_INCREMENT=47223 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelFoto`
+--
+
+DROP TABLE IF EXISTS `ImovelFoto`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelFoto` (
+  `Id_Imovel` int(11) NOT NULL DEFAULT '0',
+  `NoImagem` tinyint(4) NOT NULL,
+  `Imagem` varchar(200) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Descricao` varchar(100) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  `Mini` tinyint(1) NOT NULL,
+  `Existe` int(10) unsigned DEFAULT NULL,
+  `Publicacao` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_Imovel`,`NoImagem`),
+  KEY `Id_Imovel` (`Id_Imovel`),
+  CONSTRAINT `Id_Imovel` FOREIGN KEY (`Id_Imovel`) REFERENCES `Imovel` (`Id_Imovel`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelHistorico`
+--
+
+DROP TABLE IF EXISTS `ImovelHistorico`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelHistorico` (
+  `Id_ImovelHistorico` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Imovel` int(10) unsigned NOT NULL DEFAULT '0',
+  `Data` datetime DEFAULT NULL,
+  `Descricao` text COLLATE utf8_unicode_ci,
+  `Id_Funcionario` int(11) DEFAULT NULL,
+  `Alteracoes` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_ImovelHistorico`)
+) ENGINE=InnoDB AUTO_INCREMENT=238336 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelInfraestruturaImovel`
+--
+
+DROP TABLE IF EXISTS `ImovelInfraestruturaImovel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelInfraestruturaImovel` (
+  `Id_Imovel` int(10) unsigned NOT NULL,
+  `Id_InfraEstruturaImovel` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`Id_Imovel`,`Id_InfraEstruturaImovel`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelObjetivo`
+--
+
+DROP TABLE IF EXISTS `ImovelObjetivo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelObjetivo` (
+  `Id_Imovel` int(11) NOT NULL DEFAULT '0',
+  `Id_Objetivo` int(11) NOT NULL DEFAULT '0',
+  `Valor` double DEFAULT '0',
+  `Obs` varchar(80) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Imovel`,`Id_Objetivo`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelProposta`
+--
+
+DROP TABLE IF EXISTS `ImovelProposta`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelProposta` (
+  `Id_ImovelProposta` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Imovel` int(11) DEFAULT NULL,
+  `Id_ClienteAdmin` int(11) DEFAULT NULL,
+  `Id_Funcionario` int(11) DEFAULT NULL,
+  `Id_Objetivo` int(11) DEFAULT NULL,
+  `Proposta` text COLLATE latin1_general_ci,
+  `Valores` text COLLATE latin1_general_ci,
+  `Condicoes` text COLLATE latin1_general_ci,
+  `Data` datetime DEFAULT NULL,
+  `Finalizado` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_ImovelProposta`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelPropostaItem`
+--
+
+DROP TABLE IF EXISTS `ImovelPropostaItem`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelPropostaItem` (
+  `Id_ImovelPropostaItem` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_ImovelProposta` int(11) DEFAULT NULL,
+  `Proposta` text COLLATE latin1_general_ci,
+  `Valores` text COLLATE latin1_general_ci,
+  `Condicoes` text COLLATE latin1_general_ci,
+  `Data` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_ImovelPropostaItem`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelTaxa`
+--
+
+DROP TABLE IF EXISTS `ImovelTaxa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelTaxa` (
+  `Id_Imovel` int(10) NOT NULL DEFAULT '0',
+  `Id_Taxa` int(10) NOT NULL DEFAULT '0',
+  `Valor` double DEFAULT '0',
+  `Obs` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`Id_Imovel`,`Id_Taxa`),
+  KEY `Id_Imovel` (`Id_Imovel`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ImovelVisita`
+--
+
+DROP TABLE IF EXISTS `ImovelVisita`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ImovelVisita` (
+  `Id_ImovelVisita` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Imovel` int(11) DEFAULT NULL,
+  `Id_Funcionario` int(11) DEFAULT NULL,
+  `Id_ClienteAdmin` int(11) DEFAULT NULL,
+  `Data` datetime DEFAULT NULL,
+  `Visitado` int(11) DEFAULT NULL,
+  `Conservacao` int(11) DEFAULT NULL,
+  `Localizacao` int(11) DEFAULT NULL,
+  `Valor` int(11) DEFAULT NULL,
+  `Interesse` int(11) DEFAULT NULL,
+  `Observacao` text COLLATE latin1_general_ci,
+  PRIMARY KEY (`Id_ImovelVisita`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `InfraestruturaImovel`
+--
+
+DROP TABLE IF EXISTS `InfraestruturaImovel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `InfraestruturaImovel` (
+  `Id_InfraEstruturaImovel` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Descricao` varchar(100) NOT NULL,
+  `Id_InfraEstruturaImovelBackUp` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`Id_InfraEstruturaImovel`)
+) ENGINE=InnoDB AUTO_INCREMENT=125 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `IntegradorRegra`
+--
+
+DROP TABLE IF EXISTS `IntegradorRegra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `IntegradorRegra` (
+  `Id_IntegradorRegra` int(11) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(11) DEFAULT NULL,
+  `NomePortal` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `NoImoveis` int(11) DEFAULT NULL,
+  `Silver` int(11) DEFAULT NULL,
+  `Gold` int(11) DEFAULT NULL,
+  `Diamante` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_IntegradorRegra`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Objetivo`
+--
+
+DROP TABLE IF EXISTS `Objetivo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Objetivo` (
+  `Id_Objetivo` int(10) unsigned NOT NULL,
+  `Descricao` text NOT NULL,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Id_ObjetivoPadraoExportacao` int(10) unsigned NOT NULL,
+  `Id_ObjetivoBackup` int(10) DEFAULT NULL,
+  PRIMARY KEY (`Id_Objetivo`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ObjetivoPadraoExportacao`
+--
+
+DROP TABLE IF EXISTS `ObjetivoPadraoExportacao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ObjetivoPadraoExportacao` (
+  `Id_ObjetivoPadraoExportacao` int(11) NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_ObjetivoPadraoExportacao`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Pagina`
+--
+
+DROP TABLE IF EXISTS `Pagina`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Pagina` (
+  `Id_Pagina` int(11) NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(50) CHARACTER SET latin1 COLLATE latin1_general_ci NOT NULL,
+  `DescricaoNovo` varchar(50) DEFAULT NULL,
+  `Link` varchar(50) DEFAULT NULL,
+  `Imagem` varchar(45) DEFAULT NULL,
+  `Ordenacao` int(11) DEFAULT NULL,
+  `Novo` int(11) DEFAULT NULL,
+  `MarcadoNovo` int(11) DEFAULT NULL,
+  `OrderNovo` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`Id_Pagina`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Pais`
+--
+
+DROP TABLE IF EXISTS `Pais`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Pais` (
+  `Id_Pais` tinyint(3) unsigned NOT NULL,
+  `Descricao` varchar(50) NOT NULL,
+  `DescricaoEn` varchar(50) NOT NULL,
+  PRIMARY KEY (`Id_Pais`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Plano`
+--
+
+DROP TABLE IF EXISTS `Plano`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Plano` (
+  `Id_Plano` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `NomePlano` varchar(100) COLLATE latin1_general_ci NOT NULL DEFAULT '',
+  `NoImoveis` int(10) unsigned NOT NULL DEFAULT '0',
+  `NoFotos` varchar(100) COLLATE latin1_general_ci NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Plano`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Regiao`
+--
+
+DROP TABLE IF EXISTS `Regiao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Regiao` (
+  `Id_Regiao` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Id_Cidade` int(11) DEFAULT NULL,
+  `Descricao` text NOT NULL,
+  `Id_RegiaoBackup` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_Regiao`)
+) ENGINE=InnoDB AUTO_INCREMENT=5368 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `SiteFaq`
+--
+
+DROP TABLE IF EXISTS `SiteFaq`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `SiteFaq` (
+  `Id_SiteFaq` int(11) NOT NULL AUTO_INCREMENT,
+  `Ativo` int(11) DEFAULT NULL,
+  `Titulo` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `Descricao` text COLLATE utf8_unicode_ci,
+  PRIMARY KEY (`Id_SiteFaq`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Taxa`
+--
+
+DROP TABLE IF EXISTS `Taxa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Taxa` (
+  `Id_Taxa` int(10) unsigned NOT NULL,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Descricao` text NOT NULL,
+  `Id_TaxaPadraoExportacao` int(11) DEFAULT NULL,
+  `Id_TaxaBackup` int(10) DEFAULT NULL,
+  PRIMARY KEY (`Id_Taxa`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `TaxaPadraoExportacao`
+--
+
+DROP TABLE IF EXISTS `TaxaPadraoExportacao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `TaxaPadraoExportacao` (
+  `Id_TaxaPadraoExportacao` int(11) NOT NULL AUTO_INCREMENT,
+  `Descricao` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_TaxaPadraoExportacao`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='			';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Template`
+--
+
+DROP TABLE IF EXISTS `Template`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Template` (
+  `Id_Template` int(11) NOT NULL AUTO_INCREMENT,
+  `Nome` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `BannerWidth` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `BannerHeight` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_Template`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Tipo`
+--
+
+DROP TABLE IF EXISTS `Tipo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Tipo` (
+  `Id_Tipo` int(10) NOT NULL AUTO_INCREMENT,
+  `Id_Cliente` int(10) unsigned NOT NULL,
+  `Descricao` text NOT NULL,
+  `Id_TipoPadraoExportacao` int(11) DEFAULT NULL,
+  `Id_TipoBackup` int(10) DEFAULT NULL,
+  PRIMARY KEY (`Id_Tipo`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `TipoPadraoExportacao`
+--
+
+DROP TABLE IF EXISTS `TipoPadraoExportacao`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `TipoPadraoExportacao` (
+  `Id_TipoPadraoExportacao` int(11) NOT NULL,
+  `Descricao` varchar(150) COLLATE utf8_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`Id_TipoPadraoExportacao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Uf`
+--
+
+DROP TABLE IF EXISTS `Uf`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Uf` (
+  `Id_Uf` int(11) NOT NULL,
+  `Descricao` varchar(75) COLLATE latin1_general_ci DEFAULT NULL,
+  `Uf` varchar(2) COLLATE latin1_general_ci DEFAULT NULL,
+  `ibge` int(2) DEFAULT NULL,
+  `Id_Pais` int(3) DEFAULT NULL,
+  `ddd` varchar(50) COLLATE latin1_general_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping routines for database 'trustimovel2'
+--
+
+--
+-- Final view structure for view `ImovelAtivo`
+--
+
+/*!50001 DROP VIEW IF EXISTS `ImovelAtivo`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`trustimovel2`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `ImovelAtivo` AS select `Imovel`.`Id_Imovel` AS `Id_Imovel`,`Imovel`.`Id_Cliente` AS `Id_Cliente`,`Imovel`.`ApelidoImovel` AS `ApelidoImovel`,`Imovel`.`Ativo` AS `Ativo`,`Imovel`.`ExibirValor` AS `ExibirValor`,`Imovel`.`Id_ClienteAdmin` AS `Id_ClienteAdmin`,`Imovel`.`Id_Tipo` AS `Id_ImovelTipo`,`Imovel`.`Id_Condominio` AS `Id_Condominio`,`Imovel`.`NoChave` AS `NoChave`,`Imovel`.`Endereco` AS `Endereco`,`Imovel`.`Numero` AS `Numero`,`Imovel`.`Complemento` AS `Complemento`,`Imovel`.`Bairro` AS `Bairro`,`Imovel`.`Id_Cidade` AS `Id_Cidade`,`Imovel`.`Id_Regiao` AS `Id_Regiao`,`Imovel`.`Id_Pais` AS `Id_Pais`,`Imovel`.`Id_Uf` AS `Id_Uf`,`Imovel`.`ContatoLocal` AS `ContatoLocal`,`Imovel`.`dddTel` AS `dddTel`,`Imovel`.`Tel` AS `Tel`,`Imovel`.`Descricao` AS `Descricao`,`Imovel`.`Quartos` AS `Quartos`,`Imovel`.`Banheiro` AS `Banheiro`,`Imovel`.`Suite` AS `Suite`,`Imovel`.`VagaGaragem` AS `VagaGaragem`,`Imovel`.`Obs` AS `Obs`,`Imovel`.`FichaTec` AS `FichaTec`,`Imovel`.`ComoVisitar` AS `ComoVisitar`,`Imovel`.`DocumentacaoOK` AS `DocumentacaoOK`,`Imovel`.`DocumentacaoObs` AS `DocumentacaoObs`,`Imovel`.`Permuta` AS `Permuta`,`Imovel`.`PermutaObs` AS `PermutaObs`,`Imovel`.`Cadastro` AS `Cadastro`,`Imovel`.`DataAtualizacao` AS `DataAtualizacao`,`Imovel`.`Saida` AS `Saida`,`Imovel`.`Motivo` AS `Motivo`,`Imovel`.`Retorno` AS `Retorno`,`Imovel`.`AnuncioPlaca` AS `AnuncioPlaca`,`Imovel`.`AnuncioJornal` AS `AnuncioJornal`,`Imovel`.`AnuncioInternet` AS `AnuncioInternet`,`Imovel`.`Oportunidade` AS `Oportunidade`,`Imovel`.`Destaque` AS `Destaque`,`Imovel`.`Exclusividade` AS `Exclusividade`,`Imovel`.`VaiAdministrar` AS `VaiAdministrar`,`Imovel`.`BomParaVenda` AS `BomParaVenda`,`Imovel`.`Laudemio` AS `Laudemio`,`Imovel`.`Id_Funcionario` AS `Id_Funcionario`,`Imovel`.`AreaTotal` AS `AreaTotal`,`Imovel`.`AreaConstruida` AS `AreaConstruida`,`Imovel`.`Acesso` AS `Acesso`,`Imovel`.`Id_Captador` AS `Id_Captador`,`Imovel`.`CaptadorPorcentagem` AS `CaptadorPorcentagem`,`Imovel`.`Video` AS `Video`,`Imovel`.`Id_ImovelBackUp` AS `Id_ImovelBackUp` from `Imovel` where (`Imovel`.`Ativo` and `Imovel`.`AnuncioInternet`) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-03-20 22:20:18
