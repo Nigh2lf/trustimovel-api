@@ -180,27 +180,45 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Arquivos enviados (fotos, logos, banners). Vão para o S3 quando as três credenciais estão
+# preenchidas e não são os placeholders do .env.example; senão ficam em media/ local.
+# Static não vai para o bucket em nenhum caso: é servido pelo próprio Django.
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', '').strip()
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '').strip()
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '').strip()
+# Região onde o bucket foi criado. Região errada dá 400 (AuthorizationHeaderMalformed) no upload
+# e URL de foto que não abre.
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', '').strip() or 'us-east-1'
 
 _AWS_PLACEHOLDERS = {'your-bucket-name', 'your-access-key', 'your-secret-key'}
+_AWS_CREDENTIALS = {AWS_STORAGE_BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY}
 
-USE_S3_STORAGE = all([
-    AWS_STORAGE_BUCKET_NAME,
-    AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY,
-])
+USE_S3_STORAGE = all(_AWS_CREDENTIALS) and not (_AWS_CREDENTIALS & _AWS_PLACEHOLDERS)
 
-if USE_S3_STORAGE: # Configurações para AWS S3
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+if USE_S3_STORAGE:
+    # Domínio público dos arquivos. Aceita um domínio próprio (ex.: CloudFront); vazio usa o do
+    # bucket. As URLs não são assinadas, então o bucket precisa de uma policy liberando
+    # s3:GetObject em media/* — sem ela a foto grava, mas não abre (403).
+    AWS_S3_CUSTOM_DOMAIN = (
+        os.getenv('AWS_S3_CUSTOM_DOMAIN', '').strip()
+        or f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+    )
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    # Bucket com "Object Ownership: bucket owner enforced" rejeita ACL por objeto.
     AWS_DEFAULT_ACL = None
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-sa-east-1.amazonaws.com'
-    AWS_LOCATION = 'static'
-    DEFAULT_FILE_STORAGE = 'config.storage.MediaStorage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    STORAGES['default'] = {'BACKEND': 'config.storage.MediaStorage'}
+    # Absoluta de propósito: com domínio na URL, o static(MEDIA_URL) de config/urls.py vira no-op.
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 # Fotos de imóvel: limites de upload e do processamento da imagem.
 PROPERTY_PHOTO_FORMAT = os.getenv('PROPERTY_PHOTO_FORMAT', 'WEBP')

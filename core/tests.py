@@ -48,6 +48,12 @@ from core.services.photos import thumbnail_name
 
 TEST_MEDIA_ROOT = tempfile.mkdtemp()
 
+# Teste nunca fala com o S3: mesmo com AWS_* no .env, o arquivo vai para a pasta temporária.
+LOCAL_FILE_STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 
 def create_user(**kwargs):
     """Usuário de teste já com acesso a todos os recursos.
@@ -69,7 +75,7 @@ def build_image_file(name="foto.png", size=(1, 1)):
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
 
 
-@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT, STORAGES=LOCAL_FILE_STORAGES)
 class MediaTestCase(APITestCase):
     """Base de todo teste que grava arquivo: o media vai para uma pasta temporária."""
 

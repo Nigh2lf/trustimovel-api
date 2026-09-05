@@ -260,7 +260,20 @@ painel, que arrasta e envia a nova posição.
 
 `config/settings.py` decide sozinho: se `AWS_STORAGE_BUCKET_NAME`, `AWS_ACCESS_KEY_ID` e
 `AWS_SECRET_ACCESS_KEY` estiverem preenchidos (e não forem os placeholders), usa
-`config.storage.MediaStorage` no S3. Senão, cai para `media/` local. Não há flag manual.
+`config.storage.MediaStorage` no S3 (`STORAGES['default']`). Senão, cai para `media/` local. Não
+há flag manual. Static fica sempre local, em qualquer um dos casos.
+
+Com S3 ligado:
+
+- `AWS_S3_REGION_NAME` precisa ser a região do bucket (o de produção, `trustimovel-api-files`,
+  está em `us-east-1`). Região errada dá 400 no upload e URL que não abre.
+- As URLs das fotos não são assinadas: `https://<bucket>.s3.<região>.amazonaws.com/media/...`
+  (ou `AWS_S3_CUSTOM_DOMAIN`, se definido). O bucket precisa de uma policy liberando
+  `s3:GetObject` em `media/*`; sem ela o upload grava, mas a foto responde 403.
+- O bucket usa "Object Ownership: bucket owner enforced", então nada de ACL por objeto
+  (`AWS_DEFAULT_ACL = None`).
+- Os testes que gravam arquivo forçam `FileSystemStorage` (`LOCAL_FILE_STORAGES`), então rodar a
+  suíte com `AWS_*` no `.env` não escreve no bucket.
 
 ### Comandos de dados
 

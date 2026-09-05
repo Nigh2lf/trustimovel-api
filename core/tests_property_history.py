@@ -34,6 +34,12 @@ from core.services.permissions import grant_full_access
 
 TEST_MEDIA_ROOT = tempfile.mkdtemp()
 
+# Teste nunca fala com o S3: mesmo com AWS_* no .env, o arquivo vai para a pasta temporária.
+LOCAL_FILE_STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 
 def build_image_file(name="foto.png"):
     buffer = BytesIO()
@@ -42,7 +48,7 @@ def build_image_file(name="foto.png"):
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
 
 
-@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT, STORAGES=LOCAL_FILE_STORAGES)
 class PropertyHistoryTestCase(APITestCase):
     @classmethod
     def tearDownClass(cls):
