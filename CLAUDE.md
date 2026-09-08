@@ -197,10 +197,13 @@ Testes em [core/tests_permissions.py](core/tests_permissions.py).
 ### Fluxo de autenticação
 
 ```
-POST /auth-user/ {email, password}
+POST /auth-user/ {email, password, remember_me?}
   └─ ViewTokenObtainPair (LoginSerializer, throttle_scope="login")
        ├─ credencial inválida → 401 com mensagem em português
-       └─ ok → {access, refresh, user}
+       └─ ok → {access, refresh, user}      remember_me=true: refresh de 30 dias em vez de 4
+                                            user traz id, e-mail, nome, tipo, profile_image (URL) e permissões
+
+POST /token-refresh/ {refresh} → {access}   TokenRefreshView padrão do simplejwt, sem rotação
 
 requisições seguintes: Authorization: Bearer <access>
   └─ JWTAuthentication → request.user
@@ -208,7 +211,8 @@ requisições seguintes: Authorization: Bearer <access>
             └─ get_queryset filtra por request.user.agency_id
 ```
 
-Access vale **180 minutos** (`SIMPLE_JWT.ACCESS_TOKEN_LIFETIME`). O login tem throttle por escopo;
+Access vale **180 minutos** (`SIMPLE_JWT.ACCESS_TOKEN_LIFETIME`); o refresh, 4 dias, ou 30 com
+`remember_me` (`REMEMBER_ME_REFRESH_TOKEN_LIFETIME`). O login tem throttle por escopo;
 o `UserViewSet` expõe ainda `profile`, `permission-resources`, `forgot-password` e
 `change-password-forgot-password`.
 
@@ -216,6 +220,14 @@ o `UserViewSet` expõe ainda `profile`, `permission-resources`, `forgot-password
 painéis reagem limpando o `localStorage` e mandando para o login. 403 é usuário autenticado
 sem permissão, e a tela só avisa. O `BaseViewSet` já converteu todo 403 em 401 — com o
 permissionamento no ar isso expulsaria da aplicação quem apenas esbarrasse numa permissão.
+
+### Foto do usuário
+
+`User.profile_image` entra pela tela de Usuários (`AgencyUserSerializer`, multipart). A imagem passa
+por `validate_image_upload` (o mesmo limite de tamanho e formato das outras imagens, em
+`core/serializers/images.py`) e por `resize_upload` com `PROFILE_IMAGE_MAX_SIDE`; na troca ou na
+remoção (`profile_image` vazio) a anterior é apagada do storage. A URL sai no login, no
+`/users/profile/` e na listagem. Em multipart o mapa `permissions` viaja como texto JSON.
 
 ### Histórico do imóvel
 

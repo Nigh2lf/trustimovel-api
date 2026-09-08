@@ -5,11 +5,14 @@ from io import BytesIO
 from pathlib import PurePosixPath
 from unittest.mock import patch
 
+from django.conf import settings
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.models import (
     Agency,
@@ -41,6 +44,7 @@ from core.models import (
     State,
     User,
 )
+from core.resources import USERS_RESOURCE, AccessLevel
 from core.services.address import AddressLookupError, find_or_create_address
 from core.services.permissions import grant_full_access
 from core.services.photos import thumbnail_name
@@ -88,6 +92,48 @@ class MediaTestCase(APITestCase):
 class LoginTests(APITestCase):
     def setUp(self):
         self.user = create_user(email="usuario@teste.com", password="senha123")
+        # O throttle do login (5/min) conta no cache, que sobrevive de um teste para o outro.
+        cache.clear()
+
+    def login(self, **extra):
+        return self.client.post(
+            "/auth-user/",
+            {"email": "usuario@teste.com", "password": "senha123", **extra},
+            format="json",
+        )
+
+    @staticmethod
+    def refresh_lifetime_seconds(response):
+        payload = RefreshToken(response.data["data"]["refresh"]).payload
+        return payload["exp"] - payload["iat"]
+
+    def test_login_sem_confiar_neste_dispositivo_emite_refresh_padrao(self):
+        response = self.login()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.refresh_lifetime_seconds(response),
+            settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
+        )
+
+    def test_login_com_confiar_neste_dispositivo_emite_refresh_de_30_dias(self):
+        response = self.login(remember_me=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.refresh_lifetime_seconds(response),
+            settings.REMEMBER_ME_REFRESH_TOKEN_LIFETIME.total_seconds(),
+        )
+        # O access continua com a validade curta de sempre.
+        self.assertIn("access", response.data["data"])
+
+    def test_refresh_de_30_dias_renova_o_access(self):
+        refresh = self.login(remember_me=True).data["data"]["refresh"]
+
+        response = self.client.post("/token-refresh/", {"refresh": refresh}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
 
     def test_login_com_credenciais_corretas_retorna_tokens(self):
         response = self.client.post(
@@ -219,6 +265,128 @@ class UserViewSetPermissionTests(APITestCase):
         self.usuario.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(self.usuario.is_active)
+
+
+class UserProfileImageTests(MediaTestCase):
+    """Foto do usuário: entra pela tela de Usuários e sai no login, no perfil e na listagem."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(email="admin@teste.com", password="senha123")
+        self.admin.type = "ADMIN"
+        self.admin.save()
+        self.client.force_authenticate(self.admin)
+        # O throttle do login (5/min) conta no cache, que sobrevive de um teste para o outro.
+        cache.clear()
+
+    def user_with_photo(self):
+        user = User.objects.create_user(email="foto@teste.com", password="senha123")
+        user.profile_image = build_image_file("antiga.png")
+        user.save()
+
+        return user
+
+    def test_cria_usuario_com_foto(self):
+        response = self.client.post(
+            "/users/",
+            {"email": "novo@teste.com", "password": "Senha@123", "profile_image": build_image_file()},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(email="novo@teste.com")
+        self.assertTrue(user.profile_image.name.startswith("profile_images/"))
+        # Redimensionada e regravada no formato padrão das fotos.
+        self.assertTrue(user.profile_image.name.endswith(".webp"))
+        self.assertIn("profile_images/", response.data["data"]["profile_image"])
+
+    def test_permissoes_viajam_como_json_no_formulario_com_foto(self):
+        response = self.client.post(
+            "/users/",
+            {
+                "email": "novo@teste.com",
+                "password": "Senha@123",
+                "permissions": json.dumps({USERS_RESOURCE: int(AccessLevel.FULL)}),
+                "profile_image": build_image_file(),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data["data"]["permissions"][USERS_RESOURCE], int(AccessLevel.FULL)
+        )
+
+    def test_trocar_a_foto_apaga_a_anterior(self):
+        user = self.user_with_photo()
+        anterior = user.profile_image.name
+        storage = user.profile_image.storage
+
+        response = self.client.patch(
+            f"/users/{user.id}/", {"profile_image": build_image_file("nova.png")}, format="multipart"
+        )
+
+        user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(user.profile_image.name, anterior)
+        self.assertFalse(storage.exists(anterior))
+
+    def test_campo_vazio_remove_a_foto(self):
+        user = self.user_with_photo()
+        anterior = user.profile_image.name
+        storage = user.profile_image.storage
+
+        response = self.client.patch(
+            f"/users/{user.id}/", {"profile_image": ""}, format="multipart"
+        )
+
+        user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(user.profile_image)
+        self.assertFalse(storage.exists(anterior))
+
+    def test_editar_sem_mexer_na_foto_mantem_a_atual(self):
+        user = self.user_with_photo()
+        anterior = user.profile_image.name
+
+        response = self.client.patch(f"/users/{user.id}/", {"name": "Novo nome"}, format="multipart")
+
+        user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(user.profile_image.name, anterior)
+
+    def test_recusa_arquivo_que_nao_e_imagem(self):
+        arquivo = SimpleUploadedFile("contrato.pdf", b"%PDF-1.4 fake", content_type="application/pdf")
+
+        response = self.client.post(
+            "/users/",
+            {"email": "novo@teste.com", "password": "Senha@123", "profile_image": arquivo},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(User.objects.filter(email="novo@teste.com").exists())
+
+    def test_login_devolve_a_url_da_foto(self):
+        self.admin.profile_image = build_image_file()
+        self.admin.save()
+        self.client.force_authenticate(None)
+
+        response = self.client.post(
+            "/auth-user/", {"email": "admin@teste.com", "password": "senha123"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("profile_images/", response.data["data"]["user"]["profile_image"])
+
+    def test_login_sem_foto_devolve_nulo(self):
+        self.client.force_authenticate(None)
+
+        response = self.client.post(
+            "/auth-user/", {"email": "admin@teste.com", "password": "senha123"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["data"]["user"]["profile_image"])
 
 
 class ForgotPasswordTests(APITestCase):

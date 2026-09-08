@@ -1,5 +1,7 @@
+import json
 import re
 
+from django.conf import settings
 from django.db import transaction
 from rest_framework import serializers
 from drf_base64.fields import Base64ImageField
@@ -11,6 +13,8 @@ from core.resources import (
     AccessLevel,
     max_level_for,
 )
+from core.serializers.images import validate_image_upload
+from core.services.photos import resize_upload
 
 
 def permission_map(user):
@@ -46,6 +50,13 @@ class PermissionMapField(serializers.Field):
         return {key: int(granted.get(key, AccessLevel.NO_ACCESS)) for key in RESOURCE_KEYS}
 
     def to_internal_value(self, data):
+        # Em multipart (formulário com foto) o mapa chega como texto JSON.
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except ValueError:
+                raise serializers.ValidationError('Envie um objeto no formato {recurso: nível}.')
+
         if not isinstance(data, dict):
             raise serializers.ValidationError('Envie um objeto no formato {recurso: nível}.')
 
@@ -157,6 +168,8 @@ class AgencyUserSerializer(serializers.ModelSerializer):
     # Só USER e BROKER: um gestor de imobiliária não promove ninguém a ADMIN da plataforma.
     type = serializers.ChoiceField(choices=[User.Type.USER, User.Type.BROKER], required=False)
     type_label = serializers.CharField(source='get_type_display', read_only=True)
+    # Nulo (campo vazio no multipart) remove a foto; arquivo novo substitui a atual.
+    profile_image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -164,6 +177,7 @@ class AgencyUserSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "name",
+            "profile_image",
             "password",
             "is_active",
             "type",
@@ -187,6 +201,10 @@ class AgencyUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Já existe um usuário com este e-mail.')
 
         return value
+
+    def validate_profile_image(self, value):
+        # None é remoção; só arquivo novo passa pela checagem de tamanho e formato.
+        return validate_image_upload(value) if value else value
 
     def validate_password(self, value):
         # Em branco na edição significa "manter a senha atual".
@@ -265,6 +283,7 @@ class AgencyUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         permissions = validated_data.pop('permissions', {})
         password = validated_data.pop('password')
+        self._resize_profile_image(validated_data)
 
         user = User(**validated_data)
         user.set_password(password)
@@ -278,6 +297,11 @@ class AgencyUserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         permissions = validated_data.pop('permissions', None)
         password = validated_data.pop('password', None)
+        self._resize_profile_image(validated_data)
+
+        # Foto trocada ou removida: a anterior não tem mais quem a exiba, então sai do storage.
+        if 'profile_image' in validated_data and instance.profile_image:
+            instance.profile_image.delete(save=False)
 
         for field, value in validated_data.items():
             setattr(instance, field, value)
@@ -291,6 +315,12 @@ class AgencyUserSerializer(serializers.ModelSerializer):
             self._save_permissions(instance, permissions)
 
         return instance
+
+    def _resize_profile_image(self, validated_data):
+        if validated_data.get('profile_image'):
+            validated_data['profile_image'] = resize_upload(
+                validated_data['profile_image'], max_side=settings.PROFILE_IMAGE_MAX_SIDE
+            )
 
     def _save_permissions(self, user, permissions):
         for resource, level in permissions.items():

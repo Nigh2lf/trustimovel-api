@@ -1,9 +1,8 @@
-from pathlib import Path
-
 from django.conf import settings
 from rest_framework import serializers
 
 from core.models import CompanySection, SiteBanner
+from core.serializers.images import validate_image_upload
 from core.services.photos import resize_upload
 
 
@@ -19,20 +18,7 @@ class SiteImageSerializer(serializers.ModelSerializer):
         return value
 
     def validate_image(self, value):
-        max_megabytes = settings.PROPERTY_PHOTO_MAX_UPLOAD_MB
-
-        if value.size > max_megabytes * 1024 * 1024:
-            raise serializers.ValidationError(
-                f"A imagem deve ter no máximo {max_megabytes} MB."
-            )
-
-        extensions = settings.PROPERTY_PHOTO_ALLOWED_EXTENSIONS
-
-        if Path(value.name).suffix.lower() not in extensions:
-            aceitos = ", ".join(extension.lstrip(".").upper() for extension in extensions)
-            raise serializers.ValidationError(f"Formato não aceito. Envie {aceitos}.")
-
-        return value
+        return validate_image_upload(value)
 
     def create(self, validated_data):
         self._resize_image(validated_data)

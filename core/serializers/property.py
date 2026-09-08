@@ -1,9 +1,8 @@
-from pathlib import Path
-
 from django.conf import settings
 from django.utils.text import slugify
 from rest_framework import serializers
 
+from core.serializers.images import validate_image_upload
 from core.models import (
     AgencyExporter,
     AgencyExporterPlan,
@@ -591,20 +590,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(url) if request else url
 
     def validate_image(self, value):
-        max_megabytes = settings.PROPERTY_PHOTO_MAX_UPLOAD_MB
-
-        if value.size > max_megabytes * 1024 * 1024:
-            raise serializers.ValidationError(
-                f"A imagem deve ter no máximo {max_megabytes} MB."
-            )
-
-        extensions = settings.PROPERTY_PHOTO_ALLOWED_EXTENSIONS
-
-        if Path(value.name).suffix.lower() not in extensions:
-            aceitos = ", ".join(extension.lstrip(".").upper() for extension in extensions)
-            raise serializers.ValidationError(f"Formato não aceito. Envie {aceitos}.")
-
-        return value
+        return validate_image_upload(value)
 
     def validate(self, attrs):
         # O limite vale só para foto nova; trocar miniatura ou posição não cria arquivo.

@@ -64,6 +64,10 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(minutes=5760),
 }
 
+# "Confiar neste dispositivo" no login: o refresh sai com esta validade em vez da padrão.
+# O access continua curto; é o painel que o renova no /token-refresh/ enquanto o refresh viver.
+REMEMBER_ME_REFRESH_TOKEN_LIFETIME = timedelta(days=30)
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -237,6 +241,9 @@ PROPERTY_PHOTO_ALLOWED_EXTENSIONS = tuple(
 
 # Banner e seção da empresa ocupam a largura do site, então cabem mais que a foto de imóvel.
 SITE_IMAGE_MAX_SIDE = int(os.getenv('SITE_IMAGE_MAX_SIDE', 1920))
+
+# Foto do usuário: aparece como avatar no cabeçalho e na lista, então é bem menor.
+PROFILE_IMAGE_MAX_SIDE = int(os.getenv('PROFILE_IMAGE_MAX_SIDE', 400))
 
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
