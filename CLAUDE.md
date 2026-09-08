@@ -289,6 +289,7 @@ Com S3 ligado:
 | `seedproperties` | Imóveis de exemplo |
 | `seedagencydemo` | Volume de demonstração para uma imobiliária: pessoas, imóveis com foto, CRM, blog e banners |
 | `queuetick` | Relógio da fila de atendimento: expira ofertas, transfere quem estourou o SLA e redistribui a espera. Para o cron, a cada minuto |
+| `syncmedia` | Envia para o S3 os arquivos da pasta `media` local que o banco referencia (fotos, banners e a mini da foto principal), sem mudar registro: o campo guarda só o caminho relativo e a URL vem do storage. `--dry-run` lista, `--orphans` inclui arquivos sem registro |
 
 Tipos de imóvel, infraestruturas e taxas **não têm tela de gerência no painel da imobiliária** — vêm
 desses seeds ou do painel administrativo.
