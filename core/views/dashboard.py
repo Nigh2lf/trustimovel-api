@@ -9,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from core.classes.permission_resource import ResourcePermission
 from core.classes.permission_type_user import AllPermissionClass
 from core.models import (
+    AgencyExporterPlan,
     Deal,
     ExporterPlan,
     Lead,
@@ -233,13 +234,23 @@ class DashboardView(APIView):
             )
             .order_by("exporter__name", "position", "name")
         )
+        # Limite contratado pela imobiliária em cada plano (zero = plano não contratado).
+        # Consulta à parte: no mesmo queryset o join multiplicaria a contagem de imóveis acima.
+        limits = dict(
+            AgencyExporterPlan.objects.filter(agency_exporter__agency_id=agency_id).values_list(
+                "plan_id", "limit"
+            )
+        )
 
         exporters = []
 
         for plan in plans:
             if not exporters or exporters[-1]["name"] != plan.exporter.name:
-                exporters.append({"name": plan.exporter.name, "plans": []})
+                exporters.append({"name": plan.exporter.name, "total": 0, "plans": []})
 
-            exporters[-1]["plans"].append({"name": plan.name, "count": plan.used})
+            exporters[-1]["plans"].append(
+                {"name": plan.name, "count": plan.used, "limit": limits.get(plan.id, 0)}
+            )
+            exporters[-1]["total"] += plan.used
 
         return exporters

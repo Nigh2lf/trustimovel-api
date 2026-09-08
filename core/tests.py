@@ -1996,6 +1996,33 @@ class DashboardTests(APITestCase):
         basico = next(plan for plan in zap["plans"] if plan["name"] == "Básico")
         self.assertEqual(basico["count"], 1)
 
+    def test_resumo_de_exportadores_traz_limite_do_plano_e_total_do_portal(self):
+        exporter = Exporter.objects.get(name="ZAP Imóveis")
+        basico_plan = exporter.plans.get(name="Básico")
+        config = AgencyExporter.objects.create(agency=self.agency, exporter=exporter)
+        AgencyExporterPlan.objects.create(agency_exporter=config, plan=basico_plan, limit=5)
+        PropertyExporter.objects.create(
+            property=self.active_house, exporter=exporter, plan=basico_plan
+        )
+        # O limite que outra imobiliária contratou no mesmo plano não pode vazar para este resumo.
+        other_config = AgencyExporter.objects.create(agency=self.other_agency, exporter=exporter)
+        AgencyExporterPlan.objects.create(agency_exporter=other_config, plan=basico_plan, limit=99)
+        self.client.force_authenticate(self.user)
+
+        response = self.client.get("/dashboard/")
+
+        zap = next(
+            item for item in response.data["data"]["exporters"] if item["name"] == "ZAP Imóveis"
+        )
+        self.assertEqual(zap["total"], 1)
+        basico = next(plan for plan in zap["plans"] if plan["name"] == "Básico")
+        self.assertEqual(basico["count"], 1)
+        self.assertEqual(basico["limit"], 5)
+        # Plano sem contratação vem com limite zero, e não omitido.
+        for plan in zap["plans"]:
+            if plan["name"] != "Básico":
+                self.assertEqual(plan["limit"], 0)
+
     def test_exportador_nao_configurado_fica_fora_do_resumo(self):
         exporter = Exporter.objects.get(name="ZAP Imóveis")
         AgencyExporter.objects.create(agency=self.agency, exporter=exporter)
