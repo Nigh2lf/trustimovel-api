@@ -1,15 +1,18 @@
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
+from django.utils import timezone
 from django_filters import rest_framework as filters
 
 from core.models import (
     City,
     Condominium,
+    Deal,
     Neighborhood,
     Property,
     PropertyPhoto,
     PropertyPrice,
     PropertyType,
     State,
+    Task,
 )
 
 
@@ -113,3 +116,40 @@ class PropertyFilter(filters.FilterSet):
         photos = PropertyPhoto.objects.filter(property=OuterRef('pk'), deleted_at__isnull=True)
 
         return queryset.filter(Exists(photos)) if value else queryset.filter(~Exists(photos))
+
+
+class DealFilter(filters.FilterSet):
+    """Filtros do funil: o quadro pede só os negócios em jogo, a lista de encerrados só o resto."""
+
+    is_open = filters.BooleanFilter(field_name='outcome', lookup_expr='isnull')
+
+    class Meta:
+        model = Deal
+        fields = ['stage', 'outcome', 'type', 'responsible']
+
+
+def overdue_tasks_condition(now=None):
+    """Tarefa pendente cujo prazo já passou; a mesma regra do `is_overdue` do serializer."""
+    now = now or timezone.localtime()
+    past_due = Q(due_date__lt=now.date()) | Q(
+        due_date=now.date(), due_time__isnull=False, due_time__lt=now.time()
+    )
+
+    return ~Q(status=Task.Status.DONE) & past_due
+
+
+class TaskFilter(filters.FilterSet):
+    """Filtros da lista e da agenda de tarefas, para a tela não precisar da base inteira."""
+
+    overdue = filters.BooleanFilter(method='filter_overdue')
+    due_date_from = filters.DateFilter(field_name='due_date', lookup_expr='gte')
+    due_date_to = filters.DateFilter(field_name='due_date', lookup_expr='lte')
+
+    class Meta:
+        model = Task
+        fields = ['status', 'priority', 'type', 'due_date', 'responsible', 'lead', 'deal']
+
+    def filter_overdue(self, queryset, name, value):
+        condition = overdue_tasks_condition()
+
+        return queryset.filter(condition) if value else queryset.exclude(condition)

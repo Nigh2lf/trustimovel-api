@@ -1784,7 +1784,7 @@ class ClientTests(APITestCase):
     def test_cliente_criado_recebe_a_imobiliaria_do_usuario(self):
         self.client.force_authenticate(self.user)
 
-        response = self.client.post("/clients/", {"name": "Pedro Oliveira"}, format="json")
+        response = self.client.post("/clients/", {"name": "Pedro Oliveira", "phone": "(21) 99999-0000"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Client.objects.get(name="Pedro Oliveira").agency, self.agency)
@@ -1794,7 +1794,7 @@ class ClientTests(APITestCase):
 
         response = self.client.post(
             "/clients/",
-            {"name": "Pedro Oliveira", "agency": str(self.other_agency.id)},
+            {"name": "Pedro Oliveira", "phone": "(21) 99999-0000", "agency": str(self.other_agency.id)},
             format="json",
         )
 
@@ -1804,7 +1804,7 @@ class ClientTests(APITestCase):
     def test_codigo_e_gerado_quando_nao_informado(self):
         self.client.force_authenticate(self.user)
 
-        response = self.client.post("/clients/", {"name": "Pedro Oliveira"}, format="json")
+        response = self.client.post("/clients/", {"name": "Pedro Oliveira", "phone": "(21) 99999-0000"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["data"]["code"], "2")
@@ -1825,7 +1825,7 @@ class ClientTests(APITestCase):
         # Homônimo é comum na base de clientes, diferente de captador e proprietário.
         self.client.force_authenticate(self.user)
 
-        response = self.client.post("/clients/", {"name": "João Silva"}, format="json")
+        response = self.client.post("/clients/", {"name": "João Silva", "phone": "(21) 99999-0000"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Client.objects.filter(agency=self.agency, name="João Silva").count(), 2)

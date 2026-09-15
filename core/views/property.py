@@ -1,6 +1,6 @@
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Value, When
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, status
+from rest_framework import permissions, serializers, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
@@ -371,8 +371,25 @@ class PropertyViewSet(AgencyScopedViewSet):
         )
 
     def perform_create(self, serializer):
+        self._check_plan_limit()
         super().perform_create(serializer)
         record(serializer.instance, self.request.user, PropertyHistory.Action.CREATED)
+
+    def _check_plan_limit(self):
+        """O plano contratado limita a carteira; sem plano ou com limite vazio não há teto."""
+        agency = self.request.user.agency
+        plan = agency.plan if agency is not None else None
+
+        if plan is None or plan.deleted_at is not None or plan.property_limit is None:
+            return
+
+        total = Property.objects.filter(agency_id=agency.id, deleted_at__isnull=True).count()
+
+        if total >= plan.property_limit:
+            raise serializers.ValidationError(
+                f'O plano {plan.name} permite até {plan.property_limit} imóveis e a conta já tem '
+                f'{total}. Para cadastrar mais, amplie o plano com a plataforma.'
+            )
 
     def perform_update(self, serializer):
         # O retrato precisa sair antes do save; depois os valores antigos já se perderam.

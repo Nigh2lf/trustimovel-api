@@ -225,6 +225,21 @@ STAGE_PROBABILITIES = {
 PHOTO_SIZE = (1200, 800)
 
 
+# Terreno e imóvel comercial não têm quarto: a descrição gerada não pode falar deles.
+TYPES_WITHOUT_BEDROOMS = {
+    'Lote/Terreno',
+    'Galpão/Depósito/Armazém',
+    'Garagem',
+    'Ponto Comercial/Loja/Box',
+    'Sala/Conjunto',
+    'Consultório',
+    'Andar/Laje Corporativa',
+    'Prédio/Edifício Inteiro',
+    'Imóvel Comercial',
+    'Edifício Residencial',
+}
+
+
 class Command(BaseCommand):
     help = 'Popula uma imobiliária com dados de demonstração: pessoas, imóveis, CRM e site'
 
@@ -574,7 +589,9 @@ class Command(BaseCommand):
 
     def _build_property(self, agency, code, property_type, neighborhood, condominiums, brokers, owners):
         area = Decimal(self.rng.randrange(45, 700))
-        bedrooms = self.rng.randint(1, 5)
+        has_bedrooms = property_type.name not in TYPES_WITHOUT_BEDROOMS
+        bedrooms = self.rng.randint(1, 5) if has_bedrooms else 0
+        rooms = f'com {bedrooms} quarto(s) e ' if has_bedrooms else 'com '
         # Só uma parte da carteira fica dentro de condomínio; o resto é imóvel de rua.
         condominium = self.rng.choice(condominiums) if condominiums and self.rng.random() < 0.35 else None
         owner = self._weighted(owners)
@@ -590,8 +607,7 @@ class Command(BaseCommand):
             name=f'{property_type.name} em {neighborhood.name}',
             description=(
                 f'{property_type.name} em {neighborhood.name}, {neighborhood.city.name}/'
-                f'{neighborhood.city.state.abbreviation}, com {bedrooms} quarto(s) e '
-                f'{area} m² de área total.'
+                f'{neighborhood.city.state.abbreviation}, {rooms}{area} m² de área total.'
             ),
             address=self.rng.choice(STREET_NAMES),
             number=str(self.rng.randrange(10, 2000)),
@@ -604,8 +620,8 @@ class Command(BaseCommand):
             built_area=area - Decimal(self.rng.randrange(5, 40)),
             bedrooms=bedrooms,
             suites=self.rng.randint(0, bedrooms),
-            bathrooms=self.rng.randint(1, 4),
-            living_rooms=self.rng.randint(1, 3),
+            bathrooms=self.rng.randint(1, 4) if has_bedrooms else self.rng.randint(0, 2),
+            living_rooms=self.rng.randint(1, 3) if has_bedrooms else 0,
             parking_spaces=self.rng.randint(0, 4),
             guests=self.rng.randint(0, 8),
             is_active=self.rng.random() < 0.9,

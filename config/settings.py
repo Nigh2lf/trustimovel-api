@@ -136,6 +136,8 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT'),
+        # Sem isto a conexão negocia utf8mb3 e qualquer emoji (4 bytes) derruba a gravação com 500.
+        'OPTIONS': {'charset': 'utf8mb4'},
    }
 }
 

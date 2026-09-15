@@ -63,7 +63,7 @@ class LeadTests(CRMTestCase):
         for expected in ['LEAD001', 'LEAD002']:
             response = self.client_api.post(
                 '/leads/',
-                {'name': f'Lead {expected}', 'responsible': str(self.broker.id)},
+                {'name': f'Lead {expected}', 'phone': '(21) 99999-0000', 'responsible': str(self.broker.id)},
                 format='json',
             )
             self.assertEqual(response.status_code, 201)
@@ -178,6 +178,7 @@ class TaskTests(CRMTestCase):
             'title': 'Visita',
             'type': Task.Type.VISIT,
             'due_date': str(timezone.localdate()),
+            'responsible': str(self.broker.id),
         }
 
         response = self.client_api.post('/tasks/', payload, format='json')

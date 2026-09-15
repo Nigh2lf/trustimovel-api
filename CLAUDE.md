@@ -100,6 +100,7 @@ admin_web/                app do painel da plataforma — 170 linhas, tudo aqui 
 | `/dashboard/` | Números do painel inicial | Autenticado |
 | `/properties/{id}/history/` | Histórico de alterações do imóvel | Autenticado, recurso `imoveis` (leitura) |
 | `/reports/` | Agregados da tela de Relatórios, filtrados por período | Autenticado, recurso `relatorios` |
+| `/leads/summary/`, `/deals/summary/`, `/tasks/summary/`, `/service-tickets/summary/` | Indicadores do topo de cada tela do CRM, contados no servidor com os mesmos filtros da lista (`CrmPagination`: 15 por página, `page_size` até 200) | Autenticado, leitura do recurso |
 | `/queue/` | Fila de atendimento: estado (`GET`), regras (`settings/`), ações por lead (`leads/{id}/accept`, `decline`, `notes`, `close`, `assign`, `return`) e por corretor (`brokers/{id}/presence`, `move`, `toggle`) | Autenticado, recurso `fila`; o corretor (`BROKER`) só mexe no que está com ele |
 | `/addresses/lookup/` | Busca de endereço por CEP | Autenticado |
 | `/admin/` | Django Admin | Staff |

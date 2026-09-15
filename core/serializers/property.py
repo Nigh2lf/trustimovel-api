@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 
 from core.serializers.images import validate_image_upload
+from core.services.documents import clean_document, clean_phone, document_lookup_values
 from core.models import (
     AgencyExporter,
     AgencyExporterPlan,
@@ -160,12 +161,51 @@ class CondominiumSerializer(serializers.ModelSerializer):
         return value
 
 
+def validate_unique_document(serializer, model, value, label):
+    """CPF/CNPJ válido e sem repetição dentro da imobiliária; devolve o documento formatado."""
+    document = clean_document(value)
+
+    if not document:
+        return document
+
+    duplicates = model.objects.filter(
+        agency_id=serializer.context["request"].user.agency_id,
+        deleted_at__isnull=True,
+        document__in=document_lookup_values(document),
+    )
+
+    if serializer.instance is not None:
+        duplicates = duplicates.exclude(pk=serializer.instance.pk)
+
+    if duplicates.exists():
+        raise serializers.ValidationError(f"Já existe {label} com este CPF/CNPJ.")
+
+    return document
+
+
+def require_contact(serializer, attrs, fields):
+    """Cadastro só com nome não serve para ligar nem escrever: exige telefone ou e-mail."""
+    current = serializer.instance
+
+    # Edição que não mexe no contato passa: registro antigo sem contato não pode ficar travado.
+    if current is not None and not any(field in attrs for field in fields):
+        return attrs
+
+    if any(attrs.get(field, getattr(current, field, "")) for field in fields):
+        return attrs
+
+    raise serializers.ValidationError({"phone": "Informe ao menos um telefone ou e-mail."})
+
+
 class AgencyContactSerializer(serializers.ModelSerializer):
     """Base de captador e proprietário: mesmos campos e nome único dentro da imobiliária."""
 
     class Meta:
         fields = ["id", "name", "email", "phone"]
         read_only_fields = ("id",)
+
+    def validate_phone(self, value):
+        return clean_phone(value)
 
     def validate_name(self, value):
         value = value.strip()
@@ -249,6 +289,18 @@ class OwnerSerializer(AgencyContactSerializer):
     def validate_neighborhood(self, value):
         # Bairro é catálogo global, mas o proprietário é da imobiliária: nada a checar por agência.
         return value
+
+    def validate_mobile(self, value):
+        return clean_phone(value)
+
+    def validate_business_phone(self, value):
+        return clean_phone(value)
+
+    def validate_document(self, value):
+        return validate_unique_document(self, Owner, value, "um proprietário")
+
+    def validate(self, attrs):
+        return require_contact(self, attrs, ("email", "phone", "mobile", "business_phone"))
 
 
 class PropertyHistorySerializer(serializers.ModelSerializer):
@@ -349,6 +401,15 @@ class ClientSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Já existe um cliente com este código.")
 
         return value
+
+    def validate_phone(self, value):
+        return clean_phone(value)
+
+    def validate_document(self, value):
+        return validate_unique_document(self, Client, value, "um cliente")
+
+    def validate(self, attrs):
+        return require_contact(self, attrs, ("email", "phone"))
 
 
 class FeatureSerializer(serializers.ModelSerializer):

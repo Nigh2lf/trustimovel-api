@@ -2,6 +2,20 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from core.models import Deal, Lead, LeadInteraction, ServiceTicket, ServiceTicketMessage, Task, User
+from core.services.documents import clean_phone
+
+
+def select_messages(label):
+    """Mensagens legíveis para campo de escolha: o texto padrão do DRF sai cru na tela."""
+    message = f'Selecione {label}.'
+
+    return {'required': message, 'blank': message, 'null': message, 'invalid_choice': message}
+
+
+def text_messages(label):
+    message = f'Informe {label}.'
+
+    return {'required': message, 'blank': message, 'null': message}
 
 
 class LeadInteractionSerializer(serializers.ModelSerializer):
@@ -53,9 +67,34 @@ class LeadSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'code', 'queue_status', 'last_contact_at', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'name': {'error_messages': text_messages('o nome do lead')},
+            'source': {'error_messages': select_messages('a origem')},
+            'status': {'error_messages': select_messages('o status')},
+            'interest': {'error_messages': select_messages('o interesse')},
+        }
 
     def get_responsible_name(self, lead):
         return lead.responsible.name if lead.responsible_id else None
+
+    def validate_phone(self, value):
+        return clean_phone(value)
+
+    def validate(self, attrs):
+        # Lead da fila chega sem e-mail e lead do site pode chegar sem telefone; sem os dois não há contato.
+        current = self.instance
+
+        # Edição que não mexe no contato passa: lead antigo sem contato não pode ficar travado.
+        if current is not None and 'phone' not in attrs and 'email' not in attrs:
+            return attrs
+
+        phone = attrs.get('phone', getattr(current, 'phone', ''))
+        email = attrs.get('email', getattr(current, 'email', ''))
+
+        if not phone and not email:
+            raise serializers.ValidationError({'phone': 'Informe o telefone ou o e-mail do lead.'})
+
+        return attrs
 
     def get_assigned_to_name(self, lead):
         if not lead.assigned_to_id:
@@ -127,9 +166,19 @@ class ServiceTicketSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'protocol', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'client_name': {'error_messages': text_messages('o nome do cliente')},
+            'subject': {'error_messages': text_messages('o assunto')},
+            'category': {'error_messages': select_messages('a categoria')},
+            'status': {'error_messages': select_messages('o status')},
+            'priority': {'error_messages': select_messages('a prioridade')},
+        }
 
     def get_responsible_name(self, ticket):
         return ticket.responsible.name if ticket.responsible_id else None
+
+    def validate_phone(self, value):
+        return clean_phone(value)
 
     def validate_responsible(self, value):
         request = self.context.get('request')
@@ -174,6 +223,19 @@ class TaskSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'title': {'error_messages': text_messages('o título da tarefa')},
+            'type': {'error_messages': select_messages('o tipo da tarefa')},
+            'status': {'error_messages': select_messages('o status')},
+            'priority': {'error_messages': select_messages('a prioridade')},
+            'due_date': {'error_messages': text_messages('a data de vencimento')},
+            # A tela marca como obrigatório; sem responsável a tarefa não é de ninguém.
+            'responsible': {
+                'required': True,
+                'allow_null': False,
+                'error_messages': select_messages('o responsável'),
+            },
+        }
 
     def get_responsible_name(self, task):
         return task.responsible.name if task.responsible_id else None
@@ -257,6 +319,16 @@ class DealSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'closed_at', 'lead', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'title': {'error_messages': text_messages('o título do negócio')},
+            'client_name': {'error_messages': text_messages('o nome do cliente')},
+            'stage': {'error_messages': select_messages('o estágio')},
+            'responsible': {
+                'required': True,
+                'allow_null': False,
+                'error_messages': select_messages('o responsável'),
+            },
+        }
 
     def get_responsible_name(self, deal):
         return deal.responsible.name if deal.responsible_id else None

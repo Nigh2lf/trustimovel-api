@@ -90,14 +90,20 @@ class DashboardView(APIView):
         }
 
     def _types(self, properties):
-        rows = (
-            properties.filter(type__isnull=False)
-            .values("type__name")
+        typed = properties.filter(type__isnull=False)
+        rows = list(
+            typed.values("type__name")
             .annotate(count=Count("id"))
             .order_by("-count", "type__name")[:3]
         )
+        items = [{"name": row["type__name"], "count": row["count"]} for row in rows]
 
-        return [{"name": row["type__name"], "count": row["count"]} for row in rows]
+        # O resto entra como "Outros": sem ele a tela calcularia a fatia sobre três tipos, não sobre a carteira.
+        others = typed.count() - sum(row["count"] for row in rows)
+        if others > 0:
+            items.append({"name": "Outros", "count": others})
+
+        return items
 
     def _purposes(self, agency_id):
         rows = (
