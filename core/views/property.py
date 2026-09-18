@@ -126,6 +126,11 @@ class AgencyScopedViewSet(BaseViewSet):
         serializer.save(agency_id=self.request.user.agency_id)
 
 
+class CatalogPagination(PageNumberPagination):
+    # Catálogo pequeno e fechado: a tela de cadastro precisa dele inteiro de uma vez.
+    page_size = 200
+
+
 class CountryViewSet(GlobalCatalogViewSet):
     model = Country
     serializer_class = CountrySerializer
@@ -137,6 +142,7 @@ class CountryViewSet(GlobalCatalogViewSet):
 class StateViewSet(GlobalCatalogViewSet):
     model = State
     serializer_class = StateSerializer
+    pagination_class = CatalogPagination
     search_fields = ["name", "abbreviation"]
     filterset_class = StateFilter
     ordering_fields = ("name", "abbreviation")
@@ -165,11 +171,6 @@ class NeighborhoodViewSet(GlobalCatalogViewSet):
 
     def get_queryset(self):
         return super().get_queryset().select_related("city")
-
-
-class CatalogPagination(PageNumberPagination):
-    # Catálogo pequeno e fechado: a tela de cadastro precisa dele inteiro de uma vez.
-    page_size = 200
 
 
 class PropertyTypeViewSet(GlobalCatalogViewSet):

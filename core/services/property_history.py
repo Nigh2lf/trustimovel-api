@@ -44,7 +44,6 @@ TRACKED_FIELDS = {
     'opportunity': 'Oportunidade',
     'has_leasehold': 'Laudêmio',
     'on_site': 'Publicado no site',
-    'show_prices': 'Mostrar valores',
     'accepts_trade': 'Aceita permuta',
 }
 
@@ -62,6 +61,7 @@ def snapshot(instance):
 
     for price in instance.prices.all():
         data[f'Valor de {price.get_purpose_display()}'] = _number(price.amount)
+        data[f'Exibir valor de {price.get_purpose_display()}'] = 'Sim' if price.show_price else 'Não'
 
     for fee in instance.fees.all():
         data[f'Taxa de {fee.fee.name}'] = _number(fee.amount)

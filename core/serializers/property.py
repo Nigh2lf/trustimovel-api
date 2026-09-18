@@ -130,6 +130,7 @@ class CondominiumSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "address",
+            "zip_code",
             "neighborhood",
             "neighborhood_name",
             "city_name",
@@ -607,7 +608,7 @@ class PropertyExporterSerializer(serializers.ModelSerializer):
 class PropertyPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyPrice
-        fields = ["purpose", "amount", "notes"]
+        fields = ["purpose", "amount", "notes", "show_price"]
 
 
 class PropertyFeeSerializer(serializers.ModelSerializer):
@@ -935,7 +936,6 @@ class PropertySerializer(serializers.ModelSerializer):
             "opportunity",
             "has_leasehold",
             "on_site",
-            "show_prices",
             "accepts_trade",
             "trade_conditions",
             "views_count",

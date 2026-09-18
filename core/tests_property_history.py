@@ -131,6 +131,27 @@ class PropertyChangeHistoryTests(PropertyHistoryTestCase):
         change = next(item for item in entry.changes if item["label"] == "Valor de Comprar")
         self.assertEqual((change["from"], change["to"]), ("500000.00", "550000.00"))
 
+    def test_ocultar_valor_de_uma_forma_de_negociacao_entra_no_historico(self):
+        created = self.client.post(
+            "/properties/",
+            {"name": "Casa A", "prices": [{"purpose": "SALE", "amount": "500000.00"}]},
+            format="json",
+        ).data["data"]
+
+        self.client.patch(
+            f"/properties/{created['id']}/",
+            {"prices": [{"purpose": "SALE", "amount": "500000.00", "show_price": False}]},
+            format="json",
+        )
+
+        entry = Property.objects.get(id=created["id"]).history.get(
+            action=PropertyHistory.Action.UPDATED
+        )
+        change = next(
+            item for item in entry.changes if item["label"] == "Exibir valor de Comprar"
+        )
+        self.assertEqual((change["from"], change["to"]), ("Sim", "Não"))
+
     def test_valor_removido_aparece_como_saida(self):
         created = self.client.post(
             "/properties/",

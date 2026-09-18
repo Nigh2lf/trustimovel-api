@@ -507,6 +507,33 @@ class PropertyTenantIsolationTests(APITestCase):
             sorted(created.prices.values_list("purpose", flat=True)), ["RENT", "SALE"]
         )
 
+    def test_exibir_valor_e_decidido_por_forma_de_negociacao(self):
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            "/properties/",
+            {
+                "name": "Casa dupla",
+                "prices": [
+                    {"purpose": "SALE", "amount": "900000.00", "show_price": False},
+                    {"purpose": "RENT", "amount": "4500.00"},
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        created = Property.objects.get(name="Casa dupla")
+        self.assertFalse(created.prices.get(purpose="SALE").show_price)
+        # Sem a marcação o valor continua visível, como era antes da opção por forma.
+        self.assertTrue(created.prices.get(purpose="RENT").show_price)
+
+        detail = self.client.get(f"/properties/{created.id}/").data["data"]
+        self.assertEqual(
+            {item["purpose"]: item["show_price"] for item in detail["prices"]},
+            {"SALE": False, "RENT": True},
+        )
+
 
 class PropertyPhotoTests(MediaTestCase):
     def setUp(self):
@@ -1528,6 +1555,20 @@ class GlobalCatalogTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(names, ["Casa"])
 
+    def test_estados_vem_todos_numa_unica_pagina(self):
+        country = Country.objects.create(name="Brasil", code="BRA")
+        for index in range(27):
+            State.objects.create(country=country, name=f"Estado {index:02d}", abbreviation=f"E{index}")
+
+        self.client.force_authenticate(self.user)
+
+        response = self.client.get("/states/")
+
+        # O select de estado do cadastro lista tudo sem paginar: 27 é mais que a página padrão.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["data"]["results"]), 27)
+        self.assertIsNone(response.data["data"]["next"])
+
     def test_usuario_comum_nao_pode_criar_tipo_de_imovel(self):
         self.client.force_authenticate(self.user)
 
@@ -1656,6 +1697,32 @@ class FeatureTypeTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(list(Property.objects.get().features.all()), [self.property_feature])
+
+
+class CondominiumTests(APITestCase):
+    def setUp(self):
+        self.agency = Agency.objects.create(name="Imobiliária A")
+
+        self.user = create_user(email="user@teste.com", password="senha123")
+        self.user.agency = self.agency
+        self.user.save()
+
+        self.client.force_authenticate(self.user)
+
+    def test_condominio_guarda_o_cep_para_o_cadastro_do_imovel(self):
+        response = self.client.post(
+            "/condominiums/",
+            {"name": "Condomínio A", "zip_code": "25680-000", "address": "Rua das Flores"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        condominium = Condominium.objects.get(name="Condomínio A")
+        self.assertEqual(condominium.zip_code, "25680-000")
+
+        # O select de condomínio do imóvel lê o CEP e o endereço direto da listagem.
+        listed = self.client.get("/condominiums/").data["data"]["results"][0]
+        self.assertEqual((listed["zip_code"], listed["address"]), ("25680-000", "Rua das Flores"))
 
 
 class BrokerOwnerTests(APITestCase):

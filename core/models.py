@@ -303,6 +303,7 @@ class Condominium(models.Model):
     name         = models.CharField(max_length=120)
     description  = models.TextField(blank=True)
     address      = models.CharField(max_length=255, blank=True)
+    zip_code     = models.CharField(max_length=10, blank=True)
     deleted_at   = models.DateTimeField(null=True, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
@@ -727,6 +728,7 @@ class Property(models.Model):
     opportunity    = models.BooleanField(default=False)
     has_leasehold  = models.BooleanField(default=False, help_text='Imóvel com laudêmio')
     on_site        = models.BooleanField(default=False, help_text='Publicado no site da imobiliária')
+    # Legado: substituído por PropertyPrice.show_price; a coluna sai numa migration após o deploy.
     show_prices    = models.BooleanField(default=True)
     accepts_trade  = models.BooleanField(default=False)
     trade_conditions = models.TextField(blank=True)
@@ -875,6 +877,7 @@ class PropertyPrice(models.Model):
     purpose    = models.CharField(max_length=10, choices=Purpose.choices)
     amount     = models.DecimalField(max_digits=12, decimal_places=2)
     notes      = models.CharField(max_length=120, blank=True)
+    show_price = models.BooleanField(default=True, help_text='Valor exibido ao público; desligado, sai como "sob consulta"')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
