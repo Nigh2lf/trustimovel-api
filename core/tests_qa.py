@@ -306,6 +306,61 @@ class PlanLimitTests(QATestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
 
+class PropertyTradeConditionsTests(QATestCase):
+    """Condições de permuta só valem para imóvel que aceita permuta."""
+
+    def setUp(self):
+        super().setUp()
+        self.property_type = PropertyType.objects.create(name='Casa')
+
+    def _create(self, **fields):
+        payload = {'type': str(self.property_type.id), **fields}
+        response = self.api.post('/properties/', payload, format='json')
+
+        self.assertEqual(response.status_code, 201, response.content)
+
+        return response.json()['data']
+
+    def _patch(self, property_id, payload):
+        response = self.api.patch(f'/properties/{property_id}/', payload, format='json')
+
+        self.assertEqual(response.status_code, 200, response.content)
+
+        return response.json()['data']
+
+    def test_condicoes_sao_gravadas_quando_aceita_permuta(self):
+        data = self._create(accepts_trade=True, trade_conditions='Aceita carro na troca')
+
+        self.assertEqual(data['trade_conditions'], 'Aceita carro na troca')
+
+    def test_condicoes_sao_descartadas_quando_nao_aceita_permuta(self):
+        data = self._create(accepts_trade=False, trade_conditions='Aceita carro na troca')
+
+        self.assertEqual(data['trade_conditions'], '')
+
+    def test_desligar_a_permuta_limpa_as_condicoes(self):
+        created = self._create(accepts_trade=True, trade_conditions='Aceita carro na troca')
+
+        data = self._patch(created['id'], {'accepts_trade': False})
+
+        self.assertEqual(data['trade_conditions'], '')
+        self.assertEqual(Property.objects.get(pk=created['id']).trade_conditions, '')
+
+    def test_condicoes_nao_entram_em_imovel_que_nao_aceita_permuta(self):
+        created = self._create()
+
+        data = self._patch(created['id'], {'trade_conditions': 'Aceita carro na troca'})
+
+        self.assertEqual(data['trade_conditions'], '')
+
+    def test_editar_outro_campo_mantem_as_condicoes(self):
+        created = self._create(accepts_trade=True, trade_conditions='Aceita carro na troca')
+
+        data = self._patch(created['id'], {'name': 'Editado'})
+
+        self.assertEqual(data['trade_conditions'], 'Aceita carro na troca')
+
+
 class DashboardTypesTests(QATestCase):
     def test_tipos_trazem_outros_para_a_fatia_fechar_no_total(self):
         names = ['Apartamento', 'Casa', 'Cobertura', 'Terreno', 'Loja']

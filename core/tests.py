@@ -1360,11 +1360,12 @@ class PropertyFilterTests(MediaTestCase):
         self.house = PropertyType.objects.create(name="Casa")
         self.apartment = PropertyType.objects.create(name="Apartamento")
         self.condominium = Condominium.objects.create(agency=self.agency, name="Vila Domênico")
+        self.broker = Broker.objects.create(agency=self.agency, name="Ana Captadora")
 
-        # Casa no Centro: venda de 500 mil, destaque, fora de condomínio e com foto.
+        # Casa no Centro: venda de 500 mil, destaque, fora de condomínio, com foto e captador.
         self.centro_house = Property.objects.create(
             agency=self.agency, type=self.house, neighborhood=self.centro,
-            name="Casa no Centro", bedrooms=3, featured=True,
+            name="Casa no Centro", bedrooms=3, featured=True, broker=self.broker,
         )
         PropertyPrice.objects.create(
             property=self.centro_house, purpose=PropertyPrice.Purpose.SALE, amount=500000
@@ -1471,6 +1472,9 @@ class PropertyFilterTests(MediaTestCase):
         self.assertEqual(self._names("?exclusive=true"), {"Casa em Copacabana"})
         self.assertEqual(self._names("?accepts_trade=true"), {"Casa em Copacabana"})
         self.assertEqual(self._names("?is_active=false"), {"Apartamento em Itaipava"})
+
+    def test_filtra_por_captador(self):
+        self.assertEqual(self._names(f"?broker={self.broker.id}"), {"Casa no Centro"})
 
     def test_filtra_por_data_de_cadastro(self):
         self.assertEqual(self._names("?created_before=2020-01-01"), set())

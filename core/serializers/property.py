@@ -1007,6 +1007,17 @@ class PropertySerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate(self, attrs):
+        # Condições de permuta só existem para imóvel que aceita permuta.
+        accepts_trade = attrs.get(
+            "accepts_trade", getattr(self.instance, "accepts_trade", False)
+        )
+
+        if not accepts_trade:
+            attrs["trade_conditions"] = ""
+
+        return attrs
+
     def create(self, validated_data):
         prices = validated_data.pop("prices", [])
         fees = validated_data.pop("fees", [])

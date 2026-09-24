@@ -3,6 +3,7 @@ from django.utils import timezone
 from django_filters import rest_framework as filters
 
 from core.models import (
+    Broker,
     City,
     Condominium,
     Deal,
@@ -76,6 +77,7 @@ class PropertyFilter(filters.FilterSet):
 
     type = filters.ModelChoiceFilter(queryset=PropertyType.objects.all())
     condominium = filters.ModelChoiceFilter(queryset=Condominium.objects.all())
+    broker = filters.ModelChoiceFilter(queryset=Broker.objects.all())
     neighborhood = filters.ModelChoiceFilter(queryset=Neighborhood.objects.all())
     city = filters.ModelChoiceFilter(field_name='neighborhood__city', queryset=City.objects.all())
     state = filters.ModelChoiceFilter(
