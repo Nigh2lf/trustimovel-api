@@ -332,6 +332,8 @@ class PropertyViewSet(AgencyScopedViewSet):
         "neighborhood__name",
         "neighborhood__city__name",
         "condominium__name",
+        # Região é texto livre ("Itaipava", "Zona Sul"); sem ela a busca só acha bairro cadastrado.
+        "region",
     ]
     filter_backends = (DjangoFilterBackend, SearchFilter, NullsLastOrderingFilter)
     ordering_fields = (
@@ -397,6 +399,18 @@ class PropertyViewSet(AgencyScopedViewSet):
         before = snapshot(serializer.instance)
         super().perform_update(serializer)
         record_update(serializer.instance, self.request.user, before)
+
+    @action(detail=False, methods=["get"], url_path="next-code")
+    @requires_level(AccessLevel.WRITE)
+    def next_code(self, request):
+        """Sugestão de código para o cadastro: o próximo número livre da imobiliária.
+
+        É só sugestão; o usuário pode trocar por outro código, inclusive com letras. A garantia
+        contra duplicidade continua no `unique_together` e no `save()` do model.
+        """
+        code = Property.next_code_for(request.user.agency_id)
+
+        return self._response_format(True, status.HTTP_200_OK, data={"code": code})
 
     @action(detail=True, methods=["get"])
     @requires_level(AccessLevel.READ)

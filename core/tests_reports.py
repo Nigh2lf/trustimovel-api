@@ -49,7 +49,7 @@ class ReportsTestCase(TestCase):
 
         return response.json()['data']
 
-    def won_deal(self, value, closed_at, agency=None, responsible=None, stage=None):
+    def won_deal(self, value, closed_at, agency=None, responsible=None, stage=None, type=''):
         return Deal.objects.create(
             agency=agency or self.agency,
             title='Negócio ganho',
@@ -59,6 +59,7 @@ class ReportsTestCase(TestCase):
             outcome=Deal.Outcome.WON,
             closed_at=closed_at,
             responsible=responsible,
+            type=type,
         )
 
 
@@ -295,3 +296,79 @@ class ReportsNumbersTests(ReportsTestCase):
         self.assertEqual(data['summary']['current']['total_count'], 0)
         self.assertEqual(data['properties']['total'], 0)
         self.assertEqual(data['brokers'], [])
+
+
+class ReportsRentalsTests(ReportsTestCase):
+    """Locações saem em série própria; vendas e o resumo do topo continuam como eram."""
+
+    def setUp(self):
+        super().setUp()
+        grant(self.user, 'relatorios', AccessLevel.READ)
+
+    def test_locacoes_separam_de_vendas_e_o_resumo_soma_tudo(self):
+        self.won_deal(500000, self.today, type=Deal.Type.SALE)
+        self.won_deal(100000, self.today)  # sem tipo informado conta como venda
+        self.won_deal(3000, self.today, type=Deal.Type.RENT)
+        self.won_deal(1000, self.today, type=Deal.Type.SEASONAL)
+        self.won_deal(9999, self.today, type=Deal.Type.RENT, agency=self.other_agency)
+
+        data = self.report()
+
+        self.assertEqual(data['sales']['monthly'][-1]['count'], 2)
+        self.assertEqual(data['sales']['monthly'][-1]['value'], 600000.0)
+        self.assertEqual(data['sales']['numbers']['current']['total_value'], 600000.0)
+
+        self.assertEqual(data['rentals']['monthly'][-1]['count'], 2)
+        self.assertEqual(data['rentals']['monthly'][-1]['value'], 4000.0)
+        self.assertEqual(data['rentals']['numbers']['current']['total_count'], 2)
+        self.assertEqual(data['rentals']['numbers']['current']['average_ticket'], 2000.0)
+
+        self.assertEqual(data['summary']['current']['total_count'], 4)
+        self.assertEqual(data['summary']['current']['total_value'], 604000.0)
+
+    def test_locacoes_comparam_com_o_periodo_anterior(self):
+        self.won_deal(2000, self.today, type=Deal.Type.RENT)
+        self.won_deal(1000, self.today - timedelta(days=150), type=Deal.Type.RENT)
+        self.won_deal(800000, self.today - timedelta(days=150), type=Deal.Type.SALE)
+
+        numbers = self.report(
+            start=(self.today - timedelta(days=99)).isoformat(), end=self.today.isoformat()
+        )['rentals']['numbers']
+
+        self.assertEqual(numbers['previous']['total_value'], 1000.0)
+        self.assertEqual(numbers['changes']['total_value'], 100.0)
+
+    def test_locacao_perdida_entra_so_na_conversao(self):
+        self.won_deal(2000, self.today, type=Deal.Type.RENT)
+        Deal.objects.create(
+            agency=self.agency,
+            title='Perdido',
+            client_name='Cliente',
+            value=1500,
+            type=Deal.Type.RENT,
+            outcome=Deal.Outcome.LOST,
+            loss_reason=Deal.LossReason.PRICE,
+            closed_at=self.today,
+        )
+
+        numbers = self.report()['rentals']['numbers']['current']
+
+        self.assertEqual(numbers['total_count'], 1)
+        self.assertEqual(numbers['conversion_rate'], 50.0)
+
+    def test_imoveis_por_tipo_trazem_o_preco_de_locacao(self):
+        house = PropertyType.objects.create(name='Casa')
+        first = Property.objects.create(agency=self.agency, name='Casa 1', type=house)
+        second = Property.objects.create(agency=self.agency, name='Casa 2', type=house)
+        PropertyPrice.objects.create(property=first, purpose=PropertyPrice.Purpose.RENT, amount=3000)
+        PropertyPrice.objects.create(property=second, purpose=PropertyPrice.Purpose.RENT, amount=5000)
+        PropertyPrice.objects.create(property=second, purpose=PropertyPrice.Purpose.SALE, amount=900000)
+
+        row = self.report()['properties']['by_type'][0]
+
+        self.assertEqual(row['name'], 'Casa')
+        self.assertEqual(row['rent_count'], 2)
+        self.assertEqual(row['rent_value'], 8000.0)
+        self.assertEqual(row['rent_average'], 4000.0)
+        self.assertEqual(row['sale_count'], 1)
+        self.assertEqual(row['value'], 900000.0)

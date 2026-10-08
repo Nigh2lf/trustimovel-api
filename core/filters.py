@@ -76,6 +76,8 @@ class PropertyFilter(filters.FilterSet):
     created_before = filters.DateFilter(field_name='created_at', lookup_expr='date__lte')
 
     type = filters.ModelChoiceFilter(queryset=PropertyType.objects.all())
+    # Lista de ids separada por vírgula; a pesquisa inteligente manda "Casa" e "Casa em Condomínio" juntos.
+    types = CharInFilter(field_name='type', lookup_expr='in')
     condominium = filters.ModelChoiceFilter(queryset=Condominium.objects.all())
     broker = filters.ModelChoiceFilter(queryset=Broker.objects.all())
     neighborhood = filters.ModelChoiceFilter(queryset=Neighborhood.objects.all())

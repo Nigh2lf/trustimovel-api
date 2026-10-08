@@ -275,7 +275,7 @@ class AssistantPropertySearchTests(AssistantTestCase):
                 'min_bedrooms': 3,
                 'in_condominium': False,
             },
-            'apartamento de 3 quartos na tijuca até 500 mil fora de condomínio',
+            'apartamento à venda de 3 quartos na tijuca até 500 mil fora de condomínio',
         )
 
         self.assertEqual(result['params']['purpose'], 'SALE')
@@ -305,7 +305,121 @@ class AssistantPropertySearchTests(AssistantTestCase):
 
         self.assertNotIn('type', result['params'])
         self.assertNotIn('neighborhood', result['params'])
-        self.assertEqual(len(result['unmatched']), 2)
+        self.assertEqual(result['unmatched'], ['Tipo "castelo" não encontrado'])
+        # Bairro sem cadastro não some: vira busca textual, que alcança endereço e região.
+        self.assertEqual(result['params']['search'], 'atlantida')
+        self.assertIn('Busca: atlantida', result['applied'])
+
+    def test_resolve_finalidade_so_com_a_palavra_no_pedido(self):
+        # Sem "venda" no texto a finalidade é invenção do modelo e zeraria quem só tem aluguel.
+        result = assistant._resolve_property_search(
+            self.user, {'purpose': 'SALE'}, 'casa em itaipava'
+        )
+
+        self.assertNotIn('purpose', result['params'])
+
+        result = assistant._resolve_property_search(
+            self.user, {'purpose': 'RENT'}, 'casa para alugar em itaipava'
+        )
+
+        self.assertEqual(result['params']['purpose'], 'RENT')
+
+    def test_resolve_tipo_leva_as_variacoes_do_nome(self):
+        house = PropertyType.objects.create(name='Casa')
+        condo_house = PropertyType.objects.create(name='Casa em Condomínio')
+        PropertyType.objects.create(name='Casarão')
+
+        result = assistant._resolve_property_search(
+            self.user, {'property_type': 'casas'}, 'casas em itaipava'
+        )
+
+        self.assertNotIn('type', result['params'])
+        self.assertEqual(result['params']['types'], f'{house.id},{condo_house.id}')
+        self.assertIn('Tipo: Casa, Casa em Condomínio', result['applied'])
+
+        result = assistant._resolve_property_search(
+            self.user, {'property_type': 'casa em condomínio'}, 'casa em condomínio'
+        )
+
+        self.assertEqual(result['params']['type'], str(condo_house.id))
+
+    def test_resolve_cidade_que_na_verdade_e_bairro(self):
+        # Itaipava é distrito de Petrópolis: cadastrado como bairro, mas o modelo chama de cidade.
+        petropolis = City.objects.create(state=self.state, name='Petrópolis', ibge_code='3303906')
+        itaipava = Neighborhood.objects.create(city=petropolis, name='Itaipava')
+        Property.objects.create(agency=self.agency, code='901', neighborhood=itaipava)
+
+        result = assistant._resolve_property_search(
+            self.user, {'city': 'Itaipava'}, 'casa em itaipava'
+        )
+
+        self.assertEqual(result['params']['neighborhood'], str(itaipava.id))
+        self.assertNotIn('city', result['params'])
+        self.assertEqual(result['unmatched'], [])
+
+    def test_resolve_cidade_parecida_sem_imovel_nao_ganha_do_bairro_exato(self):
+        # Existe a cidade "Itaipava do Grajaú" (MA), mas a imobiliária só tem imóvel no bairro Itaipava.
+        maranhao = State.objects.create(
+            country=self.state.country, name='Maranhão', abbreviation='MA'
+        )
+        City.objects.create(state=maranhao, name='Itaipava do Grajaú', ibge_code='2105153')
+        petropolis = City.objects.create(state=self.state, name='Petrópolis', ibge_code='3303906')
+        itaipava = Neighborhood.objects.create(city=petropolis, name='Itaipava')
+        Property.objects.create(agency=self.agency, code='902', neighborhood=itaipava)
+
+        result = assistant._resolve_property_search(
+            self.user, {'city': 'Itaipava'}, 'casa em itaipava'
+        )
+
+        self.assertEqual(result['params']['neighborhood'], str(itaipava.id))
+        self.assertNotIn('city', result['params'])
+
+    def test_resolve_bairro_exato_sem_imovel_da_imobiliaria_vira_busca_textual(self):
+        # O IBGE tem Itaipava só em Itajaí (SC); a imobiliária escreve Itaipava na região do imóvel.
+        santa_catarina = State.objects.create(
+            country=self.state.country, name='Santa Catarina', abbreviation='SC'
+        )
+        itajai = City.objects.create(state=santa_catarina, name='Itajaí', ibge_code='4208203')
+        Neighborhood.objects.create(city=itajai, name='Itaipava')
+        Property.objects.create(
+            agency=self.agency, code='903', neighborhood=self.neighborhood, region='Itaipava'
+        )
+
+        result = assistant._resolve_property_search(
+            self.user, {'neighborhood': 'Itaipava'}, 'casa em itaipava'
+        )
+
+        self.assertNotIn('neighborhood', result['params'])
+        self.assertNotIn('city', result['params'])
+        self.assertEqual(result['params']['search'], 'Itaipava')
+        self.assertEqual(result['unmatched'], [])
+
+    def test_resolve_local_parcial_sem_imovel_vira_busca_textual(self):
+        City.objects.create(state=self.state, name='Barra Mansa', ibge_code='3300407')
+
+        result = assistant._resolve_property_search(
+            self.user, {'city': 'Barra'}, 'apartamento na barra'
+        )
+
+        self.assertNotIn('city', result['params'])
+        self.assertEqual(result['params']['search'], 'Barra')
+
+    def test_resolve_bairro_que_na_verdade_e_cidade(self):
+        result = assistant._resolve_property_search(
+            self.user, {'neighborhood': 'Teresópolis'}, 'apartamento em teresópolis'
+        )
+
+        self.assertEqual(result['params']['city'], str(self.city.id))
+        self.assertNotIn('neighborhood', result['params'])
+
+    def test_resolve_local_sem_cadastro_vira_busca_junto_com_o_termo_do_modelo(self):
+        result = assistant._resolve_property_search(
+            self.user,
+            {'city': 'Itaipava', 'search': 'piscina'},
+            'casa com piscina em itaipava',
+        )
+
+        self.assertEqual(result['params']['search'], 'Itaipava piscina')
 
     def test_resolve_recupera_preco_que_o_modelo_perdeu(self):
         result = assistant._resolve_property_search(

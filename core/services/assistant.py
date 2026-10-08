@@ -1336,18 +1336,26 @@ def _resolve_property_search(user, criteria, text):
         if criteria.get(field) and not _mentioned(criteria[field], normalized_text):
             criteria[field] = None
 
+    # Finalidade inventada pelo modelo zeraria a lista: "casa em itaipava" sem preço de venda
+    # cadastrado sumiria com purpose=SALE. Só vale com a palavra no pedido.
     purpose = str(criteria.get('purpose') or '').strip().upper()
-    if purpose in PropertyPrice.Purpose.values:
+    if purpose in PropertyPrice.Purpose.values and any(
+        keyword in normalized_text for keyword in PURPOSE_KEYWORDS[purpose]
+    ):
         params['purpose'] = purpose
         applied.append(f'Objetivo: {dict(PropertyPrice.Purpose.choices)[purpose]}')
 
     if criteria.get('property_type'):
         term = str(criteria['property_type']).strip()
-        match = _match_by_name(PropertyType.objects.filter(deleted_at__isnull=True), term)
+        matches = _match_property_types(term)
 
-        if match:
-            params['type'] = str(match.id)
-            applied.append(f'Tipo: {match.name}')
+        if len(matches) == 1:
+            params['type'] = str(matches[0].id)
+            applied.append(f'Tipo: {matches[0].name}')
+        elif matches:
+            # "Casa" também é "Casa em Condomínio": o filtro leva todos os tipos que casam.
+            params['types'] = ','.join(str(match.id) for match in matches)
+            applied.append('Tipo: ' + ', '.join(match.name for match in matches))
         else:
             unmatched.append(f'Tipo "{term}" não encontrado')
 
@@ -1366,48 +1374,46 @@ def _resolve_property_search(user, criteria, text):
         else:
             unmatched.append(f'Estado "{term}" não encontrado')
 
+    # Termos de local sem cadastro: em vez de descartar, viram busca textual (bairro, cidade,
+    # endereço, região e descrição do imóvel), que é onde "Itaipava" costuma estar escrito.
+    text_terms = []
+
     city = None
-    if criteria.get('city'):
-        term = str(criteria['city']).strip()
-        cities = City.objects.filter(deleted_at__isnull=True)
+    neighborhood = None
+    city_term = str(criteria.get('city') or '').strip()
+    neighborhood_term = str(criteria.get('neighborhood') or '').strip()
 
-        if state is not None:
-            cities = cities.filter(state=state)
+    if city_term:
+        city = _match_city(user, city_term, state)
 
-        # Prefere a cidade onde a imobiliária tem imóvel; nome parecido em outro estado não atrapalha.
-        city = _match_by_name(
-            cities,
-            term,
-            Q(
-                neighborhoods__properties__agency_id=user.agency_id,
-                neighborhoods__properties__deleted_at__isnull=True,
-            ),
-        )
+        if city is None and city_term.lower() != neighborhood_term.lower():
+            # O modelo chama de cidade o que é distrito ou bairro ("Itaipava", "Barra").
+            neighborhood = _match_neighborhood(user, city_term, None)
 
         if city:
             params['city'] = str(city.id)
             applied.append(f'Cidade: {city.name}')
+        elif neighborhood:
+            params['neighborhood'] = str(neighborhood.id)
+            applied.append(f'Bairro: {neighborhood.name}')
         else:
-            unmatched.append(f'Cidade "{term}" não encontrada')
+            text_terms.append(city_term)
 
-    if criteria.get('neighborhood'):
-        term = str(criteria['neighborhood']).strip()
-        neighborhoods = Neighborhood.objects.filter(deleted_at__isnull=True)
+    if neighborhood_term and neighborhood is None:
+        neighborhood = _match_neighborhood(user, neighborhood_term, city)
 
-        if city is not None:
-            neighborhoods = neighborhoods.filter(city=city)
-
-        neighborhood = _match_by_name(
-            neighborhoods,
-            term,
-            Q(properties__agency_id=user.agency_id, properties__deleted_at__isnull=True),
-        )
+        if neighborhood is None and city is None and neighborhood_term.lower() != city_term.lower():
+            # E o contrário: a "cidade" que o pedido cita pode ter vindo como bairro.
+            city = _match_city(user, neighborhood_term, state)
 
         if neighborhood:
             params['neighborhood'] = str(neighborhood.id)
             applied.append(f'Bairro: {neighborhood.name}')
+        elif city and 'city' not in params:
+            params['city'] = str(city.id)
+            applied.append(f'Cidade: {city.name}')
         else:
-            unmatched.append(f'Bairro "{term}" não encontrado')
+            text_terms.append(neighborhood_term)
 
     if criteria.get('condominium'):
         term = str(criteria['condominium']).strip()
@@ -1419,7 +1425,7 @@ def _resolve_property_search(user, criteria, text):
             params['condominium'] = str(condominium.id)
             applied.append(f'Condomínio: {condominium.name}')
         else:
-            unmatched.append(f'Condomínio "{term}" não encontrado')
+            text_terms.append(term)
 
     try:
         if criteria.get('min_price') is not None:
@@ -1474,10 +1480,99 @@ def _resolve_property_search(user, criteria, text):
             and len(term) <= max(40, len(text) // 2)
         )
         if acceptable:
-            params['search'] = term
-            applied.append(f'Busca: {term}')
+            text_terms.append(term)
+
+    # Cada palavra vira um termo da busca do DRF, todos obrigatórios em algum campo do imóvel.
+    search_terms = []
+
+    for term in text_terms:
+        for word in term.split():
+            if word.lower() not in (existing.lower() for existing in search_terms):
+                search_terms.append(word)
+
+    if search_terms:
+        params['search'] = ' '.join(search_terms)
+        applied.append(f'Busca: {params["search"]}')
 
     return {'params': params, 'applied': applied, 'unmatched': unmatched}
+
+
+PURPOSE_KEYWORDS = {
+    PropertyPrice.Purpose.SALE: ('vend', 'compr'),
+    PropertyPrice.Purpose.RENT: ('alug', 'loca'),
+    PropertyPrice.Purpose.SEASONAL: ('temporada', 'veraneio', 'diaria'),
+}
+
+
+def _stem(word):
+    # Plural simples: "casas" e "casa" são a mesma coisa para o filtro.
+    return word[:-1] if len(word) > 3 and word.endswith('s') else word
+
+
+def _match_property_types(term):
+    """Todos os tipos que contêm as palavras do pedido: "casa" é Casa e Casa em Condomínio.
+
+    Nome exato vem primeiro; "Casarão" não entra porque a comparação é por palavra inteira.
+    """
+    normalized = _normalize(term)
+    words = {_stem(word) for word in normalized.split()}
+    exact = []
+    partial = []
+
+    for property_type in PropertyType.objects.filter(deleted_at__isnull=True).order_by('name'):
+        name = _normalize(property_type.name)
+
+        if name == normalized:
+            exact.append(property_type)
+        elif words and words <= {_stem(word) for word in name.split()}:
+            partial.append(property_type)
+
+    return exact + partial
+
+
+def _match_place(queryset, term, agency_condition):
+    """Cidade ou bairro onde a imobiliária tem imóvel, nome exato antes do parcial.
+
+    Local sem imóvel da imobiliária não vira filtro: o catálogo do IBGE tem "Itaipava" só como
+    bairro de Itajaí (SC), e filtrar por ele zeraria a lista de quem escreveu Itaipava (o
+    distrito de Petrópolis) na região ou no endereço. Sem casamento, o termo vai para a busca
+    textual, que alcança bairro, cidade, endereço, região e descrição.
+    """
+    candidates = queryset.filter(agency_condition)
+
+    return (
+        candidates.filter(name__iexact=term).first()
+        or candidates.filter(name__icontains=term).first()
+    )
+
+
+def _match_city(user, term, state):
+    cities = City.objects.filter(deleted_at__isnull=True)
+
+    if state is not None:
+        cities = cities.filter(state=state)
+
+    return _match_place(
+        cities,
+        term,
+        Q(
+            neighborhoods__properties__agency_id=user.agency_id,
+            neighborhoods__properties__deleted_at__isnull=True,
+        ),
+    )
+
+
+def _match_neighborhood(user, term, city):
+    neighborhoods = Neighborhood.objects.filter(deleted_at__isnull=True)
+
+    if city is not None:
+        neighborhoods = neighborhoods.filter(city=city)
+
+    return _match_place(
+        neighborhoods,
+        term,
+        Q(properties__agency_id=user.agency_id, properties__deleted_at__isnull=True),
+    )
 
 
 TOOL_HANDLERS = {

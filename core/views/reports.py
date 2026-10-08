@@ -19,6 +19,11 @@ MAX_PERIOD_DAYS = 1830
 
 DEFAULT_PERIOD_MONTHS = 5
 
+# Locação e temporada são aluguel; venda e negócio sem tipo informado ficam em "Vendas".
+RENTAL_TYPES = (Deal.Type.RENT, Deal.Type.SEASONAL)
+RENTAL_DEALS = Q(type__in=RENTAL_TYPES)
+SALE_DEALS = ~RENTAL_DEALS
+
 
 class ReportsView(APIView):
     """Números da tela de Relatórios, sempre restritos à imobiliária do usuário."""
@@ -55,7 +60,8 @@ class ReportsView(APIView):
                     key: self._change(current[key], previous[key]) for key in current
                 },
             },
-            'sales': self._sales(agency_id, start, end),
+            'sales': self._deal_series(agency_id, start, end, SALE_DEALS),
+            'rentals': self._deal_series(agency_id, start, end, RENTAL_DEALS),
             'properties': self._properties(agency_id, start, end),
             'leads': self._leads(agency_id, start, end),
             'brokers': self._brokers(agency_id, start, end),
@@ -120,10 +126,25 @@ class ReportsView(APIView):
 
         return round((current / previous - 1) * 100, 1)
 
-    def _closing_numbers(self, agency_id, start, end):
+    def _deal_series(self, agency_id, start, end, deal_filter):
+        """Série mensal e números de fechamento de um recorte de negócios (vendas ou locações)."""
+        previous_start, previous_end = self._previous_period(start, end)
+        current = self._closing_numbers(agency_id, start, end, deal_filter)
+        previous = self._closing_numbers(agency_id, previous_start, previous_end, deal_filter)
+
+        return {
+            'monthly': self._monthly(agency_id, start, end, deal_filter),
+            'numbers': {
+                'current': current,
+                'previous': previous,
+                'changes': {key: self._change(current[key], previous[key]) for key in current},
+            },
+        }
+
+    def _closing_numbers(self, agency_id, start, end, deal_filter=None):
         closed = Deal.objects.filter(
             agency_id=agency_id, deleted_at__isnull=True, closed_at__range=(start, end)
-        ).aggregate(
+        ).filter(deal_filter or Q()).aggregate(
             won_count=Count('id', filter=Q(outcome=Deal.Outcome.WON)),
             won_value=Sum('value', filter=Q(outcome=Deal.Outcome.WON)),
             lost_count=Count('id', filter=Q(outcome=Deal.Outcome.LOST)),
@@ -140,7 +161,7 @@ class ReportsView(APIView):
             'conversion_rate': round(won_count / decided * 100, 1) if decided else 0.0,
         }
 
-    def _sales(self, agency_id, start, end):
+    def _monthly(self, agency_id, start, end, deal_filter):
         totals = {
             row['month']: row
             for row in Deal.objects.filter(
@@ -149,6 +170,7 @@ class ReportsView(APIView):
                 outcome=Deal.Outcome.WON,
                 closed_at__range=(start, end),
             )
+            .filter(deal_filter)
             .annotate(month=TruncMonth('closed_at'))
             .values('month')
             .annotate(value=Sum('value'), count=Count('id'))
@@ -167,7 +189,7 @@ class ReportsView(APIView):
                 }
             )
 
-        return {'monthly': monthly}
+        return monthly
 
     def _months_between(self, start, end):
         months = []
@@ -182,16 +204,8 @@ class ReportsView(APIView):
     def _properties(self, agency_id, start, end):
         properties = Property.objects.filter(agency_id=agency_id, deleted_at__isnull=True)
 
-        sale_totals = {
-            row['property__type__name']: row
-            for row in PropertyPrice.objects.filter(
-                property__agency_id=agency_id,
-                property__deleted_at__isnull=True,
-                purpose=PropertyPrice.Purpose.SALE,
-            )
-            .values('property__type__name')
-            .annotate(total=Sum('amount'), count=Count('id'))
-        }
+        sale_totals = self._price_totals(agency_id, PropertyPrice.Purpose.SALE)
+        rent_totals = self._price_totals(agency_id, PropertyPrice.Purpose.RENT)
 
         by_type = []
 
@@ -199,6 +213,9 @@ class ReportsView(APIView):
             sale = sale_totals.get(row['type__name'])
             value = float(sale['total']) if sale else 0.0
             sale_count = sale['count'] if sale else 0
+            rent = rent_totals.get(row['type__name'])
+            rent_value = float(rent['total']) if rent else 0.0
+            rent_count = rent['count'] if rent else 0
 
             by_type.append(
                 {
@@ -207,6 +224,9 @@ class ReportsView(APIView):
                     'sale_count': sale_count,
                     'value': value,
                     'average': value / sale_count if sale_count else 0.0,
+                    'rent_count': rent_count,
+                    'rent_value': rent_value,
+                    'rent_average': rent_value / rent_count if rent_count else 0.0,
                 }
             )
 
@@ -220,6 +240,19 @@ class ReportsView(APIView):
             'inactive': totals['total'] - totals['active'],
             'created_in_period': properties.filter(self._created_between(start, end)).count(),
             'by_type': by_type,
+        }
+
+    def _price_totals(self, agency_id, purpose):
+        """Soma e quantidade dos preços de uma finalidade, por nome do tipo de imóvel."""
+        return {
+            row['property__type__name']: row
+            for row in PropertyPrice.objects.filter(
+                property__agency_id=agency_id,
+                property__deleted_at__isnull=True,
+                purpose=purpose,
+            )
+            .values('property__type__name')
+            .annotate(total=Sum('amount'), count=Count('id'))
         }
 
     def _leads(self, agency_id, start, end):

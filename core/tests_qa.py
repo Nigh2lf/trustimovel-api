@@ -402,3 +402,38 @@ class AgencySettingsSecretTests(QATestCase):
 
         self.api.patch('/agency-settings/', {'recaptcha_secret_key': ''}, format='json')
         self.assertEqual(AgencySettings.objects.get(agency=self.agency).recaptcha_secret_key, '')
+
+
+class PropertyNextCodeTests(QATestCase):
+    """O cadastro de imóvel sugere o próximo código numérico livre da imobiliária."""
+
+    def test_sugere_o_proximo_numero_ignorando_codigos_com_letras(self):
+        Property.objects.create(agency=self.agency, code='10')
+        Property.objects.create(agency=self.agency, code='A99')
+        Property.objects.create(agency=self.agency, code='7')
+        Property.objects.create(agency=self.other_agency, code='500')
+
+        response = self.api.get('/properties/next-code/')
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['data'], {'code': '11'})
+
+    def test_imobiliaria_sem_imovel_comeca_do_um(self):
+        response = self.api.get('/properties/next-code/')
+
+        self.assertEqual(response.json()['data'], {'code': '1'})
+
+    def test_sugestao_bate_com_o_codigo_gerado_ao_salvar_sem_codigo(self):
+        Property.objects.create(agency=self.agency, code='41')
+        suggested = self.api.get('/properties/next-code/').json()['data']['code']
+
+        saved = Property.objects.create(agency=self.agency)
+
+        self.assertEqual(saved.code, suggested)
+
+    def test_exige_escrita_em_imoveis(self):
+        grant(self.user, 'imoveis', AccessLevel.READ)
+
+        response = self.api.get('/properties/next-code/')
+
+        self.assertIn(response.status_code, (401, 403))

@@ -770,9 +770,15 @@ class Property(models.Model):
     def _next_code(self):
         # Trava a imobiliária para dois cadastros simultâneos não tirarem o mesmo código.
         Agency.objects.select_for_update().filter(pk=self.agency_id).first()
+
+        return self.next_code_for(self.agency_id)
+
+    @classmethod
+    def next_code_for(cls, agency_id):
+        """Próximo código numérico livre da imobiliária; o cadastro sugere este valor."""
         # O código aceita letras, então a numeração automática olha só os puramente numéricos.
-        numeric_codes = Property.objects.filter(
-            agency_id=self.agency_id, code__regex=r'^[0-9]+$'
+        numeric_codes = cls.objects.filter(
+            agency_id=agency_id, code__regex=r'^[0-9]+$'
         ).values_list('code', flat=True)
 
         return str(max((int(code) for code in numeric_codes), default=0) + 1)
