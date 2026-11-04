@@ -90,6 +90,7 @@ REST_FRAMEWORK = {
         'login': '5/min',
         'address_lookup': '30/min',
         'assistant': '20/min',
+        'feed': '60/min',
     },
 }
 

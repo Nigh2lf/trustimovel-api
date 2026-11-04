@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.urls import reverse
 from django.utils.text import slugify
 from rest_framework import serializers
 
@@ -34,6 +35,7 @@ from core.services.photos import (
     resize_upload,
     thumbnail_name,
 )
+from core.services.property_feed import feed_key
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -482,15 +484,46 @@ class AgencyExporterSerializer(serializers.ModelSerializer):
     # Nome do portal pronto para a listagem e para as mensagens de exclusão.
     name = serializers.CharField(source="exporter.name", read_only=True)
     exported = serializers.SerializerMethodField()
+    # Links que a imobiliária cadastra no portal: só os imóveis marcados e todos os ativos.
+    feed_url = serializers.SerializerMethodField()
+    feed_url_all = serializers.SerializerMethodField()
 
     class Meta:
         model = AgencyExporter
-        fields = ["id", "exporter", "name", "exported", "plans", "created_at"]
-        read_only_fields = ("id", "name", "exported", "created_at")
+        fields = [
+            "id",
+            "exporter",
+            "name",
+            "exported",
+            "plans",
+            "feed_url",
+            "feed_url_all",
+            "created_at",
+        ]
+        read_only_fields = ("id", "name", "exported", "feed_url", "feed_url_all", "created_at")
 
     def get_exported(self, obj) -> int:
         # Vem da anotação do queryset; na resposta de gravação o registro ainda não a tem.
         return getattr(obj, "exported", 0)
+
+    def get_feed_url(self, obj) -> str:
+        return self._feed_url(obj, "property_feed")
+
+    def get_feed_url_all(self, obj) -> str:
+        return self._feed_url(obj, "property_feed_all")
+
+    def _feed_url(self, obj, route_name):
+        path = reverse(
+            route_name,
+            kwargs={
+                "agency_slug": obj.agency.slug,
+                "key": feed_key(obj.agency),
+                "exporter_slug": obj.exporter.slug,
+            },
+        )
+        request = self.context.get("request")
+
+        return request.build_absolute_uri(path) if request else path
 
     def validate_exporter(self, value):
         if value.deleted_at is not None or not value.is_active:

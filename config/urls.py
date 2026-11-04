@@ -35,6 +35,7 @@ from core.views import (
     BlogCategoryViewSet,
     BlogPostViewSet,
     DashboardView,
+    PropertyFeedView,
     QueueViewSet,
     ReportsView,
     DealViewSet,
@@ -114,6 +115,19 @@ urlpatterns = [
     path('agency-settings/', AgencySettingsView.as_view(), name='agency_settings'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('reports/', ReportsView.as_view(), name='reports'),
+
+    # Feeds públicos lidos pelos portais; a chave na URL substitui o login.
+    path(
+        'feeds/<slug:agency_slug>/<str:key>/<slug:exporter_slug>.xml',
+        PropertyFeedView.as_view(),
+        name='property_feed',
+    ),
+    path(
+        'feeds/<slug:agency_slug>/<str:key>/<slug:exporter_slug>/all.xml',
+        PropertyFeedView.as_view(),
+        {'scope': 'all'},
+        name='property_feed_all',
+    ),
 
     path('auth-user/', ViewTokenObtainPair.as_view(), name='token_obtain_pair'),
     path('token-refresh/', TokenRefreshView.as_view(), name='token_refresh'),

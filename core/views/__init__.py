@@ -8,6 +8,7 @@ from .assistant import (
 )
 from .agency_settings import AgencySettingsView
 from .dashboard import DashboardView
+from .feed import PropertyFeedView
 from .queue import QueueViewSet
 from .reports import ReportsView
 from .property import (

@@ -241,7 +241,7 @@ class AgencyExporterViewSet(AgencyScopedViewSet):
         # A configuração não tem exclusão lógica, então não filtra deleted_at como a base.
         return (
             AgencyExporter.objects.filter(agency_id=agency_id)
-            .select_related("exporter")
+            .select_related("exporter", "agency")
             .prefetch_related(Prefetch("plans", queryset=plans))
             .annotate(
                 exported=Count(

@@ -104,6 +104,7 @@ admin_web/                app do painel da plataforma — 170 linhas, tudo aqui 
 | `/leads/summary/`, `/deals/summary/`, `/tasks/summary/`, `/service-tickets/summary/` | Indicadores do topo de cada tela do CRM, contados no servidor com os mesmos filtros da lista (`CrmPagination`: 15 por página, `page_size` até 200) | Autenticado, leitura do recurso |
 | `/queue/` | Fila de atendimento: estado (`GET`), regras (`settings/`), ações por lead (`leads/{id}/accept`, `decline`, `notes`, `close`, `assign`, `return`) e por corretor (`brokers/{id}/presence`, `move`, `toggle`) | Autenticado, recurso `fila`; o corretor (`BROKER`) só mexe no que está com ele |
 | `/addresses/lookup/` | Busca de endereço por CEP | Autenticado |
+| `/feeds/{agency}/{key}/{exporter}.xml`, `/feeds/{agency}/{key}/{exporter}/all.xml` | Feed XML (VRSync) lido pelos portais: só os imóveis marcados para o portal, ou todos os ativos. A chave sai de `feed_key(agency)` (HMAC da `SECRET_KEY`, sem campo no banco); as duas URLs vêm em `feed_url`/`feed_url_all` de `/agency-exporters/` | Público, com a chave; 404 sem o portal ativado em Integrações |
 | `/admin/` | Django Admin | Staff |
 | `/swagger/`, `/redoc/` | Documentação da API | Público |
 
