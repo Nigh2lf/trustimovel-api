@@ -10,31 +10,44 @@ concurrency:
   group: deploy-api
   cancel-in-progress: false
 
+# A Action assume a role da AWS por OIDC: sem chave guardada no repositório.
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+
+    env:
+      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      APP_DIR: /home/trustimovel-api
+      API_URL: https://eloapi.rodrigolim.com.br
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepara a chave SSH
-        env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Publica na EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          APP_DIR: /home/trustimovel-api
-          GIT_SHA: ${{ github.sha }}
+      - name: Publica na EC2 pelo Systems Manager
         run: |
-          # O servidor baixa o commit do GitHub e roda o script versionado junto com o código.
-          ssh -i ~/.ssh/deploy_key "$EC2_USER@$EC2_HOST" \
-            "APP_DIR='$APP_DIR' GIT_SHA='$GIT_SHA' bash -s" < scripts/deploy.sh
+          # Atualiza o checkout antes de rodar o script, para o bash não ler um arquivo trocado no meio.
+          # O SSM executa como root; o sudo -u mantém os arquivos da pasta com o dono certo (ubuntu).
+          bash scripts/ssm-run.sh "deploy api ${GITHUB_SHA::7}" <<EOF
+          set -euo pipefail
+          cd "$APP_DIR"
+          sudo -u ubuntu -H git fetch --prune origin
+          sudo -u ubuntu -H git reset --hard "$GITHUB_SHA"
+          sudo -u ubuntu -H env APP_DIR="$APP_DIR" GIT_SHA="$GITHUB_SHA" bash scripts/deploy.sh
+          EOF
+
+      - name: Verifica a API publicada
+        run: |
+          # Sem token a listagem responde 401: a API está no ar atrás do nginx.
+          status=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/properties/")
+          test "$status" = "401" || { echo "A API respondeu $status (esperado 401)."; exit 1; }
+          echo "API no ar em $API_URL"
